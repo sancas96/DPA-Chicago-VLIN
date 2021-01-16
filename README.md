@@ -40,6 +40,7 @@ Al 15 de enero de 2021 a las 7:39 p.m.
         * license: cuando la inspección se realiza como un requerimiento para que el establecimiento pueda recibir su licencia para operar.
         * suspect food poisoning: inspección que se realiza en respuesta a una o más personas que indican haberse enfermado como resultado de haber comido en el establecimiento.
         * task-force inspection: cuando la inspección de un bar o taberna se ejecuta. Tipo texto.
+      
       La re-inspección puede ocurrir para todos los tipos de inspecciones y se nombrarían de la misma manera.
       
     - **Results**: Muestra el resultado de la inspección bajo las siguientes categorías: puede aprobarse, aprobarse con condiciones o fallar. Se encontró que "pasar" no tenía violaciones críticas o graves (violación número 1-14 y 15-29, respectivamente).Las categorias pueden ser: 'pass', 'pass with conditions' y 'fail'.  Tipo texto.
