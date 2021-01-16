@@ -2,10 +2,10 @@
 
 Repositorio para la clase de Arquitectura de Producto de Datos, primavera 2021-ITAM
 
-_Arenas Morales Nayeli_
-_Hernández Martínez Luz Aurora_
-_Sánchez Gutiérrez Vianney_
-_Santiago Castillejos Ita Andehui_
+- _Arenas Morales Nayeli_
+- _Hernández Martínez Luz Aurora_
+- _Sánchez Gutiérrez Vianney_
+- _Santiago Castillejos Ita Andehui_
 
 # Summary de los datos con los que trabajarás:
 
