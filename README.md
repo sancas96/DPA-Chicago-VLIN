@@ -7,7 +7,7 @@ Repositorio para la clase de Arquitectura de Producto de Datos, primavera 2021-I
 - _Sánchez Gutiérrez Vianney_
 - _Santiago Castillejos Ita Andehui_
 
-# Summary de los datos con los que trabajarás:
+# Summary de los datos:
 
 Datos: 
 - [**Chicago Food Inspections**](https://data.cityofchicago.org/Health-Human-Services/Food-Inspections/4ijn-s7e5)
@@ -17,7 +17,7 @@ Al 15 de enero de 2021 a las 7:39 p.m.
   - Número de columnas: 17
   - Qué variables son, qué información tiene:
 
-**Inspection ID**: Identificador consecutivo de tipo numérico.
+    -**Inspection ID**: Identificador consecutivo de tipo numérico.
 
 **DBA Name**: Acrónimo de 'Doing business as', que es el nombre legal del establecimiento, de tipo texto.
 
