@@ -17,7 +17,7 @@ Al 15 de enero de 2021 a las 7:39 p.m.
   - Número de columnas: 17
   - Qué variables son, qué información tiene:
 
-    -**Inspection ID**: Identificador consecutivo de tipo numérico.
+    - **Inspection ID**: Identificador consecutivo de tipo numérico.
 
 **DBA Name**: Acrónimo de 'Doing business as', que es el nombre legal del establecimiento, de tipo texto.
 
