@@ -1,20 +1,21 @@
 # DPA-Chicago-VLIN
+
 Repositorio para la clase de Arquitectura de Producto de Datos, primavera 2021-ITAM
 
-+ *Arenas Morales Nayeli*
-+ *Hernández Martínez Luz Aurora*
-+ *Sánchez Gutiérrez Vianney*
-+ *Santiago Castillejos Ita Andehui*
+_Arenas Morales Nayeli_
+_Hernández Martínez Luz Aurora_
+_Sánchez Gutiérrez Vianney_
+_Santiago Castillejos Ita Andehui_
 
-+ Summary de los datos con los que trabajarás:
+# Summary de los datos con los que trabajarás:
 
 Datos: 
-+ [**Chicago Food Inspections**](https://data.cityofchicago.org/Health-Human-Services/Food-Inspections/4ijn-s7e5)
+- [**Chicago Food Inspections**](https://data.cityofchicago.org/Health-Human-Services/Food-Inspections/4ijn-s7e5)
 
 Al 15 de enero de 2021 a las 7:39 p.m.
-  + Número de registros: 215,067
-  + Número de columnas: 17
-  + Qué variables son, qué información tiene:
+  - Número de registros: 215,067
+  - Número de columnas: 17
+  - Qué variables son, qué información tiene:
 
 **Inspection ID**: Identificador consecutivo de tipo numérico.
 
@@ -39,19 +40,13 @@ Risk: Cada establecimiento se categoriza según el tipo de riesgo a la salud, es
 
 **Inspection Type**: Las inspecciones se pueden describir como sigue:
 
--canvass: el tipo más común de inspección que se ejecuta con una frecuencia relativa al riesgo del establecimiento.
-
--consultation: cuando la inspección se realiza a petición del dueño previo a la apertura del establecimiento.
-
--complaint: cuando la inspección se realiza en respuesta a una queja en contra del establecimiento.
-
--license: cuando la inspección se realiza como un requerimiento para que el establecimiento pueda recibir su licencia para operar.
-
--suspect food poisoning: inspección que se realiza en respuesta a una o más personas que indican haberse enfermado como resultado de haber comido en el establecimiento.
-
--task-force inspection: cuando la inspección de un bar o taberna se ejecuta. Tipo texto.
-
-La re-inspección puede ocurrir para todos los tipos de inspecciones y se nombrarían de la misma manera
+* canvass: el tipo más común de inspección que se ejecuta con una frecuencia relativa al riesgo del establecimiento.
+* consultation: cuando la inspección se realiza a petición del dueño previo a la apertura del establecimiento.
+* complaint: cuando la inspección se realiza en respuesta a una queja en contra del establecimiento.
+* license: cuando la inspección se realiza como un requerimiento para que el establecimiento pueda recibir su licencia para operar.
+* suspect food poisoning: inspección que se realiza en respuesta a una o más personas que indican haberse enfermado como resultado de haber comido en el establecimiento.
+* task-force inspection: cuando la inspección de un bar o taberna se ejecuta. Tipo texto.
+* La re-inspección puede ocurrir para todos los tipos de inspecciones y se nombrarían de la misma manera
 
 **Results**: Muestra el resultado de la inspección bajo las siguientes categorías: puede aprobarse, aprobarse con condiciones o fallar. Se encontró que "pasar" no tenía violaciones críticas o graves (violación número 1-14 y 15-29, respectivamente).Las categorias pueden ser: 'pass', 'pass with conditions' y 'fail'.  Tipo texto.
 
@@ -63,6 +58,6 @@ La re-inspección puede ocurrir para todos los tipos de inspecciones y se nombra
 
 **Location**: la latitud y longitud del establecimiento. Tipo localización.
 
-+ Pregunta analítica: ¿El establecimiento pasará o no la inspección?
+- Pregunta analítica: ¿El establecimiento pasará o no la inspección?
 
-+ Frecuencia de actualización de los datos: Diaria
+- Frecuencia de actualización de los datos: Diaria
