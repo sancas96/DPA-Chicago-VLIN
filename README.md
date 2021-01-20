@@ -45,8 +45,8 @@ Al 15 de enero de 2021 a las 7:39 p.m.
       
     - **Results**: Muestra el resultado de la inspección bajo las siguientes categorías: puede aprobarse, aprobarse con condiciones o fallar. Se encontró que "pasar" no tenía violaciones críticas o graves (violación número 1-14 y 15-29, respectivamente).Las categorias pueden ser: 'pass', 'pass with conditions' y 'fail'.  Tipo texto.
     - **Violations**: Un establecimiento puede recibir uno o más de 45 (1-44 y 70) infracciones distintas a la norma. Además se enuncia el requisito que el establecimiento debe cumplir para NO recibir una infracción, seguido de una descripción específica de los hallazgos que causaron la violación. Tipo texto.
-    - **Latitud**: Latitud del establecimiento. Tipo numérico.
-    - **Longitud**: longitud del establecimiento. Tipo numérico.
+    - **Latitude**: Latitud del establecimiento. Tipo numérico.
+    - **Longitude**: longitud del establecimiento. Tipo numérico.
     - **Location**: la latitud y longitud del establecimiento. Tipo localización.
     
   - Pregunta analítica: ¿El establecimiento pasará o no la inspección?
