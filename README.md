@@ -51,3 +51,38 @@ Al 15 de enero de 2021 a las 7:39 p.m.
     
   - Pregunta analítica: ¿El establecimiento pasará o no la inspección?
   - Frecuencia de actualización de los datos: Diaria
+
+Figura 1. Estructura básica del proyecto.
+  
+```  
+├── README.md          <- The top-level README for developers using this project.
+├── conf
+│   ├── base           <- Space for shared configurations like parameters
+│   └── local          <- Space for local configurations, usually credentials
+│
+├── docs               <- Space for Sphinx documentation
+│
+├── notebooks          <- Jupyter notebooks.
+│
+├── references         <- Data dictionaries, manuals, and all other explanatory materials.
+│
+├── results            <- Intermediate analysis as HTML, PDF, LaTeX, etc.
+│
+├── requirements.txt   <- The requirements file
+│
+├── .gitignore         <- Avoids uploading data, credentials, outputs, system files etc
+│
+├── infrastructure
+├── sql
+├── setup.py
+└── src                <- Source code for use in this project.
+    ├── __init__.py    <- Makes src a Python module
+    │
+    ├── utils      <- Functions used across the project
+    │
+    │
+    ├── etl       <- Scripts to transform data from raw to intermediate
+    │
+    │
+    ├── pipeline
+```
