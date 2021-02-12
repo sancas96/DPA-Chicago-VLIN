@@ -1,2 +1,4 @@
-# ignore everything in .gitignore 
+# ignore everything in .gitignore
+notebooks/eda/.ipynb_checkpoints/
+data/*.csv
 conf/local/**
