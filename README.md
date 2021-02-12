@@ -60,6 +60,7 @@ Figura 1. Estructura básica del proyecto.
 │   ├── base           <- Space for shared configurations like parameters
 │   └── local          <- Space for local configurations, usually credentials
 │
+├── data               <- Space for data
 ├── docs               <- Space for Sphinx documentation
 │
 ├── notebooks          <- Jupyter notebooks.
