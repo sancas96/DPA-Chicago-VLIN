@@ -50,7 +50,14 @@ Al 15 de enero de 2021 a las 7:39 p.m.
     - **Location**: la latitud y longitud del establecimiento. Tipo localización.
     
   - Pregunta analítica: ¿El establecimiento pasará o no la inspección?
-  - Frecuencia de actualización de los datos: Diaria
+  - Frecuencia de actualización de los datos: Diaria, aunque para efectos del proyecto serà de manera semanal.
+  
+# Reproducibilidad del Notebook.
+-----
+
+1. En la carpeta data, colocar el archivo 'ood_Inspections.csv' que està disponible en este [**Drive**](https://drive.google.com/file/d/1Pyobds5_o_4wKHbZQTsmzfVd-NszjEQM/view?usp=sharing) 
+2. En un ambiente virtual hay que instalar los requirements.txt : 'pip install -r requirements.txt'
+3. Hay que colocarnos en la carpeta del repositorio.
 
 Figura 1. Estructura básica del proyecto.
   
