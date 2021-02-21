@@ -52,16 +52,67 @@ Al 15 de enero de 2021 a las 7:39 p.m.
   - Pregunta analítica: ¿El establecimiento pasará o no la inspección?
   - Frecuencia de actualización de los datos: Diaria, aunque para efectos del proyecto serà de manera semanal.
   
-# Reproducibilidad del Notebook.
+
+# Reproducibilidad.
+
+**Nota:** Recordar que todo esto tiene que ser ejecutado desde tu ambiente de trabajo seleccionado, ejecutando `pyenv activate <<tu_ambiente>>`
+
+El notebook `Chicago_food_inspections.ipynb` con el Análisis exploratorio se encuentra en la carpeta `notebooks/eda/`.
 
 Para este notebook utilizamos **Python 3.7.4**
 1. En la carpeta data, colocar el archivo `Food_Inspections.csv` que està disponible en este [**Drive**](https://drive.google.com/file/d/1Pyobds5_o_4wKHbZQTsmzfVd-NszjEQM/view?usp=sharing) 
-2. En un ambiente virtual hay que instalar los requirements.txt : `pip install -r requirements.txt`
+2. En tu ambiente virtual hay que instalar los requirements.txt : `pip install -r requirements.txt`
 3. Hay que colocarnos en la carpeta del repositorio.
 -----
 
-Figura 1. Estructura básica del proyecto.
-  
+# Ingestión y almacenamiento automatizado
+
+**Nota:** Para este punto, cabe mencionar que el archivo `requirements.txt` ya fue actualizado para que este contenga las librerìas `boto3, PyYAML, pickle y sodapy`.
+
+1. Para este checkpoint se espera que se tenga un archivo que se encuentra en tu carpeta `conf/local/` con las credenciales de aws, este archivo deberá ser llamado `credentials.yaml` con el siguiente formato:
+
+```
+s3:
+  aws_access_key_id : "xxxxxx"
+  aws_secret_access_key : "xxxxxx"
+food_inspections:
+  api_token: "xxxxxxx"
+```
+
+Donde las llaves de `s3` son para interactuar de manera más sencilla con el servicio de almacenamiento de archivos de `aws`.
+El apartado de `food_inspections` contiene en la llave `api_token` que es el token generado desde [**aqui**](https://data.cityofchicago.org/login?return_to=%2Fprofile%2Fedit%2Fdeveloper_settings). Para más informaciòn se puede consultar [**aqui**](https://dev.socrata.com/foundry/data.cityofchicago.org/4ijn-s7e5).
+
+
+2. También se espera que dentro de _aws_ se tenga un bucket llamado `data-product-architecture-equipo-8`.
+
+3. Los pasos para el proceso de ingestión son los siguientes:
+    
+    a. En tu terminal escribe `ipython3`
+    b. Importa las funciones creadas para la ingestión y alamcenamiento:
+                ```
+                from src.utils.general import * 
+                from src.utils.general import * 
+                ```
+    c. Ejecuta los siguientes comandos:
+                ```
+                inicial = ingesta_inicial(get_client(),300000)
+                guardar_ingesta(inicial, 'data-product-architecture-equipo-8','ingestion/initial/historic-inspections-')
+                consecutiva = ingesta_consecutiva(get_client(),"2021-02-18T00:00:00.000",1000)
+                guardar_ingesta(consecutiva,'data-product-architecture-equipo-8','ingestion/consecutive/consecutive-inspections-')
+                ```
+    d. Revisa dentro de tu bucket de aws que la información esté almacenada.
+
+# Bastión
+
+Para tener acceso al Bastión se requiere que el administrador le haya dado acceso al mismo y tener un usuario asignado y correr en su terminal lo siguiente:
+    `ssh -i <<llave_privada>> <<usuario>>@ip_del_ec2`
+
+**Nota:** El usuario lmillan ya fue asignado con la llave correspondiente.
+
+---
+
+**Figura 1**. Estructura básica del proyecto.
+
 ```  
 ├── README.md          <- The top-level README for developers using this project.
 ├── conf
