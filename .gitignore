@@ -2,3 +2,7 @@
 notebooks/eda/.ipynb_checkpoints/
 data/*.csv
 conf/local/**
+.idea/
+src/__pycache__
+src/pipeline/__pycache__
+src/utils/__pycache__
