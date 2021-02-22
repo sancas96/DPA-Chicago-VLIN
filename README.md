@@ -111,6 +111,7 @@ El apartado de `food_inspections` contiene en la llave `api_token` que es el tok
 
                 ```
 
+        
         **Nota:** Especificaciones sobre la función `ingesta_consecutiva`: el parámetro _"fecha"_ se usa si se quiere descargar en una fecha específica, dejando la variable _"delta"_ en `False`. Si, como es el objetivo de este proyecto, se desea descargar la información en intervalos de tiempo iguales (7 días por ejemplo) se usa el parámetro _"delta"_ igual a `True`. 
 
     d. Revisa dentro de tu bucket de aws que la información esté almacenada.
