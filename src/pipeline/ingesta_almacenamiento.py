@@ -1,7 +1,8 @@
-from datetime import date
+from datetime import date, timedelta
 from sodapy import Socrata
 from src.utils.general import *
 
+import pandas as pd
 import boto3
 import pickle
 import io
@@ -38,7 +39,7 @@ def ingesta_inicial(client,limite):
     """
     Esta función recibe como parámetros:
         client: el cliente con el que nos podemos comunicar con la API,
-        limmit: el límite de registros que queremos obtener al llamar a la API
+        limite: el límite de registros que queremos obtener al llamar a la API
 
     Regresa:
         datos_binario: una lista de los elementos que la API regresó.
@@ -50,14 +51,21 @@ def ingesta_inicial(client,limite):
     return datos_binario
 
     
-def ingesta_consecutiva(client,fecha,limite):
+def ingesta_consecutiva(client,fecha,limite, delta=True):
     """
     Esta función recibe como parámetros
         client: el cliente con el que nos podemos comunicar con la API,
         fecha: la fecha de la que se quieren obtener nuevos datos al llamar a la API,
         limit: el límite de registros para obtener de regreso.
     """
-    datos=client.get('4ijn-s7e5', limit=limite, where=f"inspection_date='{fecha}'")
+    if delta == True:
+        today = date.today()
+        delta_date = today - timedelta(days=7)
+        where = f"inspection_date>='{delta_date}'"
+        datos = client.get('4ijn-s7e5', limit=limite, where=where)
+    else:
+        datos=client.get('4ijn-s7e5', limit=limite, where=f"inspection_date='{fecha}'")
+
     datos_binario=io.BytesIO()
     pickle.dump(datos, datos_binario)
     datos_binario.seek(0)

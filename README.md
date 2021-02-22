@@ -94,22 +94,24 @@ El apartado de `food_inspections` contiene en la llave `api_token` que es el tok
                 ```
                 from src.utils.general import * 
 
-                from src.utils.general import * 
+                from src.pipeline.ingesta_almacenamiento import *
 
                 ```
     
-    c. Ejecuta los siguientes comandos:
+    c. Es importante ejecutar los siguientes comandos en este orden:
 
                 ```
                 inicial = ingesta_inicial(get_client(),300000)
 
                 guardar_ingesta(inicial, 'data-product-architecture-equipo-8','ingestion/initial/historic-inspections-')
 
-                consecutiva = ingesta_consecutiva(get_client(),"2021-02-18T00:00:00.000",1000)
+                consecutiva = ingesta_consecutiva(get_client(),"2021-02-18T00:00:00.000",1000, delta=False)
 
                 guardar_ingesta(consecutiva,'data-product-architecture-equipo-8','ingestion/consecutive/consecutive-inspections-')
 
                 ```
+
+        **Nota:** Especificaciones sobre la función `ingesta_consecutiva`: el parámetro _"fecha"_ se usa si se quiere descargar en una fecha específica, dejando la variable _"delta"_ en `False`. Si, como es el objetivo de este proyecto, se desea descargar la información en intervalos de tiempo iguales (7 días por ejemplo) se usa el parámetro _"delta"_ igual a `True`. 
 
     d. Revisa dentro de tu bucket de aws que la información esté almacenada.
 
