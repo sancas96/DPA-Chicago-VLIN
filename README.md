@@ -88,23 +88,35 @@ El apartado de `food_inspections` contiene en la llave `api_token` que es el tok
 3. Los pasos para el proceso de ingestión son los siguientes:
     
     a. En tu terminal escribe `ipython3`
+
     b. Importa las funciones creadas para la ingestión y alamcenamiento:
+
                 ```
                 from src.utils.general import * 
+
                 from src.utils.general import * 
+
                 ```
+    
     c. Ejecuta los siguientes comandos:
+
                 ```
                 inicial = ingesta_inicial(get_client(),300000)
+
                 guardar_ingesta(inicial, 'data-product-architecture-equipo-8','ingestion/initial/historic-inspections-')
+
                 consecutiva = ingesta_consecutiva(get_client(),"2021-02-18T00:00:00.000",1000)
+
                 guardar_ingesta(consecutiva,'data-product-architecture-equipo-8','ingestion/consecutive/consecutive-inspections-')
+
                 ```
+
     d. Revisa dentro de tu bucket de aws que la información esté almacenada.
 
 # Bastión
 
 Para tener acceso al Bastión se requiere que el administrador le haya dado acceso al mismo y tener un usuario asignado y correr en su terminal lo siguiente:
+
     `ssh -i <<llave_privada>> <<usuario>>@ip_del_ec2`
 
 **Nota:** El usuario lmillan ya fue asignado con la llave correspondiente.
