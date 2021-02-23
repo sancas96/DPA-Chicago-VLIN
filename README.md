@@ -78,11 +78,13 @@ Donde las llaves de `s3` son para interactuar de manera más sencilla con el ser
 El apartado de `food_inspections` contiene la llave `api_token` que es el token generado desde [**aqui**](https://data.cityofchicago.org/login?return_to=%2Fprofile%2Fedit%2Fdeveloper_settings) que funcionará para hacer la ingestión de la API. Para más información se puede consultar [**aqui**](https://dev.socrata.com/foundry/data.cityofchicago.org/4ijn-s7e5).
 
 2. De igual manera se asume que dentro de _aws_ se tenga levantado un bucket llamado `data-product-architecture-equipo-8` con la siguiente estructura:
+```
     ├── data-product-architecture-equipo-8
     │   ├── ingesta    
     │       ├── initial
     │       ├── consecutive
-                                           
+```
+
 3. Los pasos para el proceso de ingestión son los siguientes:
     
     a. En tu terminal escribe `ipython3`
