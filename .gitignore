@@ -6,4 +6,4 @@ conf/local/**
 src/__pycache__
 src/pipeline/__pycache__
 src/utils/__pycache__
-.ipynb_checkpoints/
+.ipynb_checkpoints/*
