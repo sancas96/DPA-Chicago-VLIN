@@ -51,7 +51,7 @@ Al 15 de enero de 2021 a las 7:39 p.m.
 
 **Importante** Recordar que todo el proyecto debe ser ejecutado desde tu ambiente de trabajo seleccionado, ejecutando `pyenv activate <<tu_ambiente>>`
 
-Para este notebook utilizamos la versioń **Python 3.7.4**
+Para este proyecto utilizamos la versioń **Python 3.7.4**
 1. En la carpeta data, colocar el archivo `Food_Inspections.csv` que está disponible en este [**Drive**](https://drive.google.com/file/d/1Pyobds5_o_4wKHbZQTsmzfVd-NszjEQM/view?usp=sharing) 
 2. En tu ambiente virtual hay que instalar las librerías del archivo requirements.txt : `pip install -r requirements.txt`
 3. En la terminal debemos estar ubicados en la carpeta de este repositorio.
@@ -111,7 +111,7 @@ El apartado de `food_inspections` contiene la llave `api_token` que es el token 
                 ```
 
         
-    **Nota:** Especificaciones sobre la función `ingesta_consecutiva`: el parámetro _"fecha"_ se usa si se quiere descargar en una fecha específica, dejando la variable _"delta"_ en `False`. Si, como es el objetivo de este proyecto, se desea descargar la información en intervalos de tiempo iguales (7 días por ejemplo) se usa el parámetro _"delta"_ igual a `True`. Este parámetro puede se modificado en `src/utils/constants.py`
+    **Nota:** Especificaciones sobre la función `ingesta_consecutiva`: el parámetro _"fecha"_ se usa si se quiere descargar en una fecha específica, dejando la variable _"delta"_ en `False`. Si, como es el objetivo de este proyecto, se desea descargar la información en intervalos de tiempo iguales (7 días por ejemplo) se usa el parámetro _"delta"_ igual a `True`. Este parámetro puede se modificado en `src/utils/constants.py`. Los datos del portal son a dos días anteriores a la fecha de publicación, esos dos días de rezago se registrarán en la siguiente ingesta y así sucesivamente.
 
     d. Revisa dentro de tu bucket de aws que la información esté almacenada.
 
