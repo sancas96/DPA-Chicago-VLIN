@@ -1,5 +1,4 @@
 import yaml
-import src.utils.constants as constants
 
 def read_yaml(credentials_file):
     """
@@ -22,7 +21,7 @@ def get_s3_credentials(credentials_file):
     Y regresa:
         s3_credential: las credenciales para comunicarse con AWS.
     """
-    s3_credentials=read_yaml(credentials_file)[constants.credenciales_aws]
+    s3_credentials=read_yaml(credentials_file)['s3']
     return s3_credentials
 
 
@@ -34,5 +33,5 @@ def get_api_token(credentials_file):
         Y regresa:
             token: el token para comunicarse con la API.
         """
-    token=read_yaml(credentials_file)[constants.credenciales_api]
+    token=read_yaml(credentials_file)['food_inspections']
     return token

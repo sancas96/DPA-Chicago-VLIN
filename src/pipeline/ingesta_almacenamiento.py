@@ -16,7 +16,7 @@ def get_client():
         client: que es el cliente que se puede conectar a la API.
     """
 
-    token=get_api_token('conf/local/credentials.yaml')[constants.parametro_api_token]
+    token=get_api_token('conf/local/credentials.yaml')['api_token']
     client = Socrata(constants.url_api,token)
     return client
 
@@ -30,9 +30,9 @@ def get_s3_resource():
 
     s3_creds= get_s3_credentials('conf/local/credentials.yaml')
     session = boto3.Session(
-        aws_access_key_id=s3_creds[constants.parametro_s3_key],
-        aws_secret_access_key=s3_creds[constants.parametro_s3_key_access])
-    s3 = session.client(constants.credenciales_aws)
+        aws_access_key_id=s3_creds['aws_access_key_id'],
+        aws_secret_access_key=s3_creds['aws_secret_access_key'])
+    s3 = session.client('s3')
     return s3
 
 
