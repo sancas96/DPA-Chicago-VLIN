@@ -17,17 +17,12 @@ Al 15 de enero de 2021 a las 7:39 p.m.
   - Número de columnas: 17
   - Qué variables son, qué información tiene:
 
-    - **Inspection ID**: Identificador consecutivo de tipo numérico.
-
-    - **DBA Name**: Acrónimo de 'Doing business as', que es el nombre legal del establecimiento, de tipo texto.
-
-    - **AKA Name**: Acrónimo de 'Also known as' el nombre por el que es conocido el establecimiento, de tipo texto.
-
-    - **License #**: Número de licencia asignado por el 'Department of Business Affairs and Consumer Protection', de tipo numérico.
-
+    - **Inspection ID**: Identificador consecutivo. Tipo numérico.
+    - **DBA Name**: Acrónimo de 'Doing business as', que es el nombre legal del establecimiento. Tipo texto.
+    - **AKA Name**: Acrónimo de 'Also known as' el nombre por el que es conocido el establecimiento. Tipo texto.
+    - **License #**: Número de licencia asignada por el 'Department of Business Affairs and Consumer Protection'. Tipo numérico.
     - **Facility Type**: Tipo de servicio según su descripción: bakery, banquet hall, candy store, caterer, coffee shop, day care center (for ages less than 2), day care center (for ages 2 – 6), day care center (combo, for ages less than 2 and 2 – 6 combined), gas station, Golden Diner, grocery store, hospital, long term care center(nursing home), liquor store, mobile food dispenser, restaurant, paleteria, school, shelter, tavern, social club, wholesaler, or Wrigley Field Rooftop. Tipo texto.
-    
-    - **Risk**: Cada establecimiento se categoriza según el tipo de riesgo a la salud, esto es 1 el más alto a 3 el más bajo. Tipo texto.
+    - **Risk**: Cada establecimiento se categoriza según el tipo de riesgo a la salud, esto es 1 (el más alto) a 3 (el más bajo). Tipo texto.
     - **Address**: Dirección para facilitar su ubicación. Tipo texto.
     - **City**: Ciudad. Tipo texto.
     - **State**: Estado. Tipo texto.
@@ -40,36 +35,36 @@ Al 15 de enero de 2021 a las 7:39 p.m.
         * license: cuando la inspección se realiza como un requerimiento para que el establecimiento pueda recibir su licencia para operar.
         * suspect food poisoning: inspección que se realiza en respuesta a una o más personas que indican haberse enfermado como resultado de haber comido en el establecimiento.
         * task-force inspection: cuando la inspección de un bar o taberna se ejecuta. Tipo texto.
-      
-      La re-inspección puede ocurrir para todos los tipos de inspecciones y se nombrarían de la misma manera.
-      
+     
+      La re-inspección puede ocurrir para todos los tipos de inspecciones y se nombrarían de la misma manera. 
     - **Results**: Muestra el resultado de la inspección bajo las siguientes categorías: puede aprobarse, aprobarse con condiciones o fallar. Se encontró que "pasar" no tenía violaciones críticas o graves (violación número 1-14 y 15-29, respectivamente).Las categorias pueden ser: 'pass', 'pass with conditions' y 'fail'.  Tipo texto.
     - **Violations**: Un establecimiento puede recibir uno o más de 45 (1-44 y 70) infracciones distintas a la norma. Además se enuncia el requisito que el establecimiento debe cumplir para NO recibir una infracción, seguido de una descripción específica de los hallazgos que causaron la violación. Tipo texto.
     - **Latitude**: Latitud del establecimiento. Tipo numérico.
     - **Longitude**: longitud del establecimiento. Tipo numérico.
     - **Location**: la latitud y longitud del establecimiento. Tipo localización.
     
-  - Pregunta analítica: ¿El establecimiento pasará o no la inspección?
-  - Frecuencia de actualización de los datos: Diaria, aunque para efectos del proyecto serà de manera semanal.
+  - La pregunta analítica que queremos resolver es: ¿El establecimiento pasará o no la inspección?
+  - Frecuencia de actualización de los datos: Diaria, aunque para efectos del proyecto será de manera semanal.
   
 
-# Reproducibilidad.
+# Reproducibilidad y requerimientos.
 
-**Nota:** Recordar que todo esto tiene que ser ejecutado desde tu ambiente de trabajo seleccionado, ejecutando `pyenv activate <<tu_ambiente>>`
+**Importante** Recordar que todo el proyecto debe ser ejecutado desde tu ambiente de trabajo seleccionado, ejecutando `pyenv activate <<tu_ambiente>>`
 
-El notebook `Chicago_food_inspections.ipynb` con el Análisis exploratorio se encuentra en la carpeta `notebooks/eda/`.
-
-Para este notebook utilizamos **Python 3.7.4**
-1. En la carpeta data, colocar el archivo `Food_Inspections.csv` que està disponible en este [**Drive**](https://drive.google.com/file/d/1Pyobds5_o_4wKHbZQTsmzfVd-NszjEQM/view?usp=sharing) 
-2. En tu ambiente virtual hay que instalar los requirements.txt : `pip install -r requirements.txt`
-3. Hay que colocarnos en la carpeta del repositorio.
+Para este notebook utilizamos la versioń **Python 3.7.4**
+1. En la carpeta data, colocar el archivo `Food_Inspections.csv` que está disponible en este [**Drive**](https://drive.google.com/file/d/1Pyobds5_o_4wKHbZQTsmzfVd-NszjEQM/view?usp=sharing) 
+2. En tu ambiente virtual hay que instalar las librerías del archivo requirements.txt : `pip install -r requirements.txt`
+3. En la terminal debemos estar ubicados en la carpeta de este repositorio.
 -----
+
+# Análisis Exploratorio
+El notebook `Chicago_food_inspections.ipynb` con el análisis exploratorio se encuentra en la carpeta `notebooks/eda/`.
 
 # Ingestión y almacenamiento automatizado
 
-**Nota:** Para este punto, cabe mencionar que el archivo `requirements.txt` ya fue actualizado para que este contenga las librerìas `boto3, PyYAML, pickle y sodapy`.
+**Nota:** Para la correcta ejecución de la ingestión y almacenamiento se actualizó el archivo `requirements.txt` que contiene las librerìas `boto3, PyYAML, pickle y sodapy`.
 
-1. Para este checkpoint se espera que se tenga un archivo que se encuentra en tu carpeta `conf/local/` con las credenciales de aws, este archivo deberá ser llamado `credentials.yaml` con el siguiente formato:
+1. Para la ejecución de este checkpoint se asume que se tiene un archivo que se encuentra en la carpeta `conf/local/` con las credenciales de aws, este archivo deberá ser llamado `credentials.yaml` con el siguiente esqueleto:
 
 ```
 s3:
@@ -80,11 +75,14 @@ food_inspections:
 ```
 
 Donde las llaves de `s3` son para interactuar de manera más sencilla con el servicio de almacenamiento de archivos de `aws`.
-El apartado de `food_inspections` contiene en la llave `api_token` que es el token generado desde [**aqui**](https://data.cityofchicago.org/login?return_to=%2Fprofile%2Fedit%2Fdeveloper_settings). Para más informaciòn se puede consultar [**aqui**](https://dev.socrata.com/foundry/data.cityofchicago.org/4ijn-s7e5).
+El apartado de `food_inspections` contiene la llave `api_token` que es el token generado desde [**aqui**](https://data.cityofchicago.org/login?return_to=%2Fprofile%2Fedit%2Fdeveloper_settings) que funcionará para hacer la ingestión de la API. Para más información se puede consultar [**aqui**](https://dev.socrata.com/foundry/data.cityofchicago.org/4ijn-s7e5).
 
-
-2. También se espera que dentro de _aws_ se tenga un bucket llamado `data-product-architecture-equipo-8`.
-
+2. De igual manera se asume que dentro de _aws_ se tenga levantado un bucket llamado `data-product-architecture-equipo-8` con la siguiente estructura:
+    ├── data-product-architecture-equipo-8
+    │   ├── ingesta    
+    │       ├── initial
+    │       ├── consecutive
+                                           
 3. Los pasos para el proceso de ingestión son los siguientes:
     
     a. En tu terminal escribe `ipython3`
@@ -112,7 +110,7 @@ El apartado de `food_inspections` contiene en la llave `api_token` que es el tok
                 ```
 
         
-    **Nota:** Especificaciones sobre la función `ingesta_consecutiva`: el parámetro _"fecha"_ se usa si se quiere descargar en una fecha específica, dejando la variable _"delta"_ en `False`. Si, como es el objetivo de este proyecto, se desea descargar la información en intervalos de tiempo iguales (7 días por ejemplo) se usa el parámetro _"delta"_ igual a `True`. 
+    **Nota:** Especificaciones sobre la función `ingesta_consecutiva`: el parámetro _"fecha"_ se usa si se quiere descargar en una fecha específica, dejando la variable _"delta"_ en `False`. Si, como es el objetivo de este proyecto, se desea descargar la información en intervalos de tiempo iguales (7 días por ejemplo) se usa el parámetro _"delta"_ igual a `True`. Este parámetro puede se modificado en `src/utils/constants.py`
 
     d. Revisa dentro de tu bucket de aws que la información esté almacenada.
 
