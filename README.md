@@ -93,7 +93,7 @@ El apartado de `food_inspections` contiene la llave `api_token` que es el token 
     - **bucket**: nombre de tu bucket en `aws`.
 
 
-La estructura que desarrollada es la siguiente:
+La estructura desarrollada es la siguiente:
 
   Ingesta inicial: Con las credenciales que se dieron de alta para conectarnos a la API de _data.cityofchicago.org_, descargamos la base de datos disponible hasta la fecha. Este archivo se guardara con el nombre `historica-{fecha}.pkl`
 ```
@@ -104,7 +104,7 @@ PYTHONPATH=$PWD luigi --module src.pipeline.almacenamiento almacenar --tipo-inge
 PYTHONPATH=$PWD luigi --module src.pipeline.almacenamiento almacenar --tipo-ingesta consecutiva --fecha 2021-03-17T00:00:00.00 --bucket data-product-architecture-equipo-8
 ```
 
-6. Revisa dentro de tu bucket de aws que la información esté almacenada.
+5. Revisa dentro de tu bucket de aws que la información esté almacenada.
 
 Al terminar este proceso verificamos el DAG en Luigi.
 
