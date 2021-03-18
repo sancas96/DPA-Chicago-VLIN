@@ -77,7 +77,7 @@ food_inspections:
 ```
 
 Donde las llaves de `s3` son para interactuar de manera más sencilla con el servicio de almacenamiento de archivos de `aws`.
-El apartado de `food_inspections` contiene la llave `api_token` que es el token generado desde [**aqui**](https://data.cityofchicago.org/login?return_to=%2Fprofile%2Fedit%2Fdeveloper_settings) que funcionará para hacer la ingestión de la API. Para más información se puede consultar [**aqui**](https://dev.socrata.com/foundry/data.cityofchicago.org/4ijn-s7e5).
+El apartado de `food_inspections` contiene la llave `api_token` que es el token generado desde [**aquí**](https://data.cityofchicago.org/login?return_to=%2Fprofile%2Fedit%2Fdeveloper_settings) que funcionará para hacer la ingestión de la API. Para más información se puede consultar [**aquí**](https://dev.socrata.com/foundry/data.cityofchicago.org/4ijn-s7e5).
 
 2. De igual manera se asume que dentro de _aws_ se tenga levantado un bucket llamado `data-product-architecture-equipo-8` con la siguiente estructura:
 ```
@@ -90,7 +90,7 @@ El apartado de `food_inspections` contiene la llave `api_token` que es el token 
 
     - **tipo_ingesta**: historica o consecutiva.
     - **fecha**: Fecha en la que se está haciendo la ingesta con respecto a inspection date.
-    - **bucket**: nombre de tu bucket en `aws`
+    - **bucket**: nombre de tu bucket en `aws`.
 
 
 La estructura que desarrollada es la siguiente:
