@@ -107,7 +107,8 @@ PYTHONPATH=$PWD luigi --module src.pipeline.almacenamiento almacenar --tipo-inge
 6. Revisa dentro de tu bucket de aws que la información esté almacenada.
 
 Al terminar este proceso verificamos el DAG en Luigi.
-<img width="720" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/dag_luigi.png">
+
+<img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/dag_luigi.png">
 
 
 # Bastión 📖
