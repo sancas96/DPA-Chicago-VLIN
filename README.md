@@ -2,14 +2,16 @@
 
 Repositorio para la clase de Arquitectura de Producto de Datos, primavera 2021-ITAM
 
-- _Arenas Morales Nayeli_
-- _Hernández Martínez Luz Aurora_
-- _Sánchez Gutiérrez Vianney_
-- _Santiago Castillejos Ita Andehui_
+| Nombre | usuario git |
+|-------|-----------------|
+|Arenas Morales Nayeli | arenitss |
+|Hernández Martínez Luz Aurora | LuzVerde23 |
+|Sánchez Gutiérrez Vianney |visagu55 |
+|Santiago Castillejos Ita Andehui | sancas96 |
 
 # Summary de los datos: 📋
 
-Datos: 
+Datos:
 - [**Chicago Food Inspections**](https://data.cityofchicago.org/Health-Human-Services/Food-Inspections/4ijn-s7e5)
 
 Al 15 de enero de 2021 a las 7:39 p.m.
@@ -27,7 +29,7 @@ Al 15 de enero de 2021 a las 7:39 p.m.
     - **City**: Ciudad. Tipo texto.
     - **State**: Estado. Tipo texto.
     - **Zip**: Código postal. Tipo numérico.
-    - **Inspection Date**: Describe la fecha en que la inspección ocurrió, un establecimiento puede tener múltiples inspecciones. Tipo de fecha y hora. 
+    - **Inspection Date**: Describe la fecha en que la inspección ocurrió, un establecimiento puede tener múltiples inspecciones. Tipo de fecha y hora.
     - **Inspection Type**: Las inspecciones se pueden describir como sigue:
         * canvass: el tipo más común de inspección que se ejecuta con una frecuencia relativa al riesgo del establecimiento.
         * consultation: cuando la inspección se realiza a petición del dueño previo a la apertura del establecimiento.
@@ -35,34 +37,34 @@ Al 15 de enero de 2021 a las 7:39 p.m.
         * license: cuando la inspección se realiza como un requerimiento para que el establecimiento pueda recibir su licencia para operar.
         * suspect food poisoning: inspección que se realiza en respuesta a una o más personas que indican haberse enfermado como resultado de haber comido en el establecimiento.
         * task-force inspection: cuando la inspección de un bar o taberna se ejecuta. Tipo texto.
-     
-      La re-inspección puede ocurrir para todos los tipos de inspecciones y se nombrarían de la misma manera. 
+
+      La re-inspección puede ocurrir para todos los tipos de inspecciones y se nombrarían de la misma manera.
     - **Results**: Muestra el resultado de la inspección bajo las siguientes categorías: puede aprobarse, aprobarse con condiciones o fallar. Se encontró que "pasar" no tenía violaciones críticas o graves (violación número 1-14 y 15-29, respectivamente).Las categorias pueden ser: 'pass', 'pass with conditions' y 'fail'.  Tipo texto.
     - **Violations**: Un establecimiento puede recibir uno o más de 45 (1-44 y 70) infracciones distintas a la norma. Además se enuncia el requisito que el establecimiento debe cumplir para NO recibir una infracción, seguido de una descripción específica de los hallazgos que causaron la violación. Tipo texto.
     - **Latitude**: Latitud del establecimiento. Tipo numérico.
     - **Longitude**: longitud del establecimiento. Tipo numérico.
     - **Location**: la latitud y longitud del establecimiento. Tipo localización.
-    
+
   - La pregunta analítica que queremos resolver es: ¿El establecimiento pasará o no la inspección?
   - Frecuencia de actualización de los datos: Diaria, aunque para efectos del proyecto será de manera semanal.
-  
 
-# Reproducibilidad y requerimientos.
+
+# Reproducibilidad y requerimientos. ⚙️
 
 **Importante** Recordar que todo el proyecto debe ser ejecutado desde tu ambiente de trabajo seleccionado, ejecutando `pyenv activate <<tu_ambiente>>`
 
 Para este proyecto utilizamos la versioń **Python 3.7.4**
-1. En la carpeta data, colocar el archivo `Food_Inspections.csv` que está disponible en este [**Drive**](https://drive.google.com/file/d/1Pyobds5_o_4wKHbZQTsmzfVd-NszjEQM/view?usp=sharing) 
+1. En la carpeta data, colocar el archivo `Food_Inspections.csv` que está disponible en este [**Drive**](https://drive.google.com/file/d/1Pyobds5_o_4wKHbZQTsmzfVd-NszjEQM/view?usp=sharing)
 2. En tu ambiente virtual hay que instalar las librerías del archivo requirements.txt : `pip install -r requirements.txt`
-3. En la terminal debemos estar ubicados en la carpeta de este repositorio.
+3. En la terminal debemos estar ubicados en la carpeta de este repositorio y ejecutar un `export PYTHONPATH=$PWD`
 -----
 
-# Análisis Exploratorio
+# Análisis Exploratorio ⌨️
 El notebook `Chicago_food_inspections.ipynb` con el análisis exploratorio se encuentra en la carpeta `notebooks/eda/`.
 
-# Ingestión y almacenamiento automatizado
+# Ingestión y almacenamiento automatizado con Luigi 🛠️
 
-**Nota:** Para la correcta ejecución de la ingestión y almacenamiento se actualizó el archivo `requirements.txt` que contiene las librerìas `boto3, PyYAML, pickle y sodapy`.
+**Nota:** Para la correcta ejecución de la ingestión y almacenamiento se actualizó el archivo `requirements.txt`.
 
 1. Para la ejecución de este checkpoint se asume que se tiene un archivo que se encuentra en la carpeta `conf/local/` con las credenciales de aws, este archivo deberá ser llamado `credentials.yaml` con el siguiente esqueleto:
 
@@ -81,41 +83,34 @@ El apartado de `food_inspections` contiene la llave `api_token` que es el token 
 ```
     ├── data-product-architecture-equipo-8
     │   ├── ingesta    
-    │       ├── initial
-    │       ├── consecutive
+```
+3. Ejecutar `luigid` y en el navegador entrar a `http://localhost:8082/static/visualiser/index.html`
+
+4. Para la ingesta y almacenamiento ocuparemos como orquestador a [Luigi](https://luigi.readthedocs.io/en/stable/index.html). Tanto para la ingesta y almacenamiento, los parámetros para las tareas son los siguientes:
+
+    - **tipo_ingesta**: historica o consecutiva.
+    - **fecha**: Fecha en la que se está haciendo la ingesta con respecto a inspection date.
+    - **bucket**: nombre de tu bucket en `aws`
+
+
+La estructura que desarrollada es la siguiente:
+
+  Ingesta inicial: Con las credenciales que se dieron de alta para conectarnos a la API de _data.cityofchicago.org_, descargamos la base de datos disponible hasta la fecha. Este archivo se guardara con el nombre `historica-{fecha}.pkl`
+```
+PYTHONPATH=$PWD luigi --module src.pipeline.almacenamiento almacenar --tipo-ingesta historica --fecha 2021-01-21T00:00:00.00 --bucket data-product-architecture-equipo-8
+```    
+  Ingesta consecutiva: Es la descarga de los datos posteriores a la ingesta inicial hasta la fecha solicitada. Este archivo se guardara con el nombre `consecutiva-{fecha}.pkl`
+```
+PYTHONPATH=$PWD luigi --module src.pipeline.almacenamiento almacenar --tipo-ingesta consecutiva --fecha 2021-03-17T00:00:00.00 --bucket data-product-architecture-equipo-8
 ```
 
-3. Los pasos para el proceso de ingestión son los siguientes:
-    
-    a. En tu terminal escribe `ipython3`
+6. Revisa dentro de tu bucket de aws que la información esté almacenada.
 
-    b. Importa las funciones creadas para la ingestión y alamcenamiento:
+Al terminar este proceso verificamos el DAG en Luigi.
+<img width="320" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/Luigi_tasks.jpg">
 
-                ```
-                from src.utils.general import * 
-                from src.pipeline.ingesta_almacenamiento import *
 
-                ```
-    
-    c. Es importante ejecutar los siguientes comandos en este orden:
-
-                ```
-                inicial = ingesta_inicial(get_client(),300000)
-
-                guardar_ingesta(inicial, 'data-product-architecture-equipo-8','ingestion/initial/historic-inspections-')
-
-                consecutiva = ingesta_consecutiva(get_client(),"2021-02-18T00:00:00.000",1000, delta=False)
-
-                guardar_ingesta(consecutiva,'data-product-architecture-equipo-8','ingestion/consecutive/consecutive-inspections-')
-
-                ```
-
-        
-    **Nota:** Especificaciones sobre la función `ingesta_consecutiva`: el parámetro _"fecha"_ se usa si se quiere descargar en una fecha específica, dejando la variable _"delta"_ en `False`. Si, como es el objetivo de este proyecto, se desea descargar la información en intervalos de tiempo iguales (7 días por ejemplo) se usa el parámetro _"delta"_ igual a `True`. Este parámetro puede se modificado en `src/utils/constants.py`. Los datos del portal son a dos días anteriores a la fecha de publicación, esos dos días de rezago se registrarán en la siguiente ingesta y así sucesivamente.
-
-    d. Revisa dentro de tu bucket de aws que la información esté almacenada.
-
-# Bastión
+# Bastión 📖
 
 Para tener acceso al Bastión se requiere que el administrador le haya dado acceso al mismo y tener un usuario asignado y correr en su terminal lo siguiente:
 
@@ -132,9 +127,9 @@ Para tener acceso al Bastión se requiere que el administrador le haya dado acce
 ├── conf
 │   ├── base           <- Space for shared configurations like parameters
 │   └── local          <- Space for local configurations, usually credentials
-│
+├── data               <- Space for data
 ├── docs               <- Space for Sphinx documentation
-│
+├── images             <- Space for images
 ├── notebooks          <- Jupyter notebooks.
 │
 ├── references         <- Data dictionaries, manuals, and all other explanatory materials.
@@ -151,11 +146,11 @@ Para tener acceso al Bastión se requiere que el administrador le haya dado acce
 └── src                <- Source code for use in this project.
     ├── __init__.py    <- Makes src a Python module
     │
-    ├── utils      <- Functions used across the project
+    ├── utils          <- Functions used across the project
     │
     │
-    ├── etl       <- Scripts to transform data from raw to intermediate
+    ├── etl            <- Scripts to transform data from raw to intermediate
     │
     │
-    ├── pipeline
+    └── pipeline       <- Scripts to data ingestion
 ```
