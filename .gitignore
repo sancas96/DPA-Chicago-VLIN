@@ -8,4 +8,5 @@ src/pipeline/__pycache__
 src/utils/__pycache__
 .ipynb_checkpoints
 src/__init__.py
-checkpoints_itam/
+checkpoints/
+tmp/luigi/*.pkl
