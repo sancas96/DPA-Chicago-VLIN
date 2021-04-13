@@ -35,3 +35,15 @@ def get_api_token(credentials_file):
         """
     token=read_yaml(credentials_file)['food_inspections']
     return token
+
+
+def get_service_file(credentials_file):
+    """
+        Esta función recibe como parámetro:
+            credentials_file: archivo generado por read_yaml.
+
+        Y regresa:
+            service_file: los datos para comunicarse con la base de datos.
+        """
+    service=read_yaml(credentials_file)['chicago_food']
+    return service
