@@ -6,8 +6,8 @@ Repositorio para la clase de Arquitectura de Producto de Datos, primavera 2021-I
 |-------|-----------------|
 |Arenas Morales Nayeli | arenitss |
 |Hernández Martínez Luz Aurora | LuzVerde23 |
-|Sánchez Gutiérrez Vianney |visagu55 |
 |Santiago Castillejos Ita Andehui | sancas96 |
+|Sánchez Gutiérrez Vianney | visagu55 |
 
 # Summary de los datos: 📋
 
@@ -79,9 +79,9 @@ food_inspections:
 Donde las llaves de `s3` son para interactuar de manera más sencilla con el servicio de almacenamiento de archivos de `aws`.
 El apartado de `food_inspections` contiene la llave `api_token` que es el token generado desde [**aquí**](https://data.cityofchicago.org/login?return_to=%2Fprofile%2Fedit%2Fdeveloper_settings) que funcionará para hacer la ingestión de la API. Para más información se puede consultar [**aquí**](https://dev.socrata.com/foundry/data.cityofchicago.org/4ijn-s7e5).
 
-2. De igual manera se asume que dentro de _aws_ se tenga levantado un bucket llamado `data-product-architecture-equipo-8` con la siguiente estructura:
+2. De igual manera se asume que dentro de _aws_ se tenga levantado un bucket llamado `data-product-architecture-equipo8` con la siguiente estructura:
 ```
-    ├── data-product-architecture-equipo-8
+    ├── data-product-architecture-equipo8
     │   ├── ingesta    
 ```
 3. Ejecutar `luigid` y en el navegador entrar a `http://localhost:8082/static/visualiser/index.html`
@@ -97,11 +97,11 @@ La estructura desarrollada es la siguiente:
 
   Ingesta inicial: Con las credenciales que se dieron de alta para conectarnos a la API de _data.cityofchicago.org_, descargamos la base de datos disponible hasta la fecha. Este archivo se guardara con el nombre `historica-{fecha}.pkl`
 ```
-PYTHONPATH=$PWD luigi --module src.pipeline.almacenamiento almacenar --tipo-ingesta historica --fecha 2021-01-21T00:00:00.00 --bucket data-product-architecture-equipo-8
+PYTHONPATH=$PWD luigi --module src.pipeline.almacenamiento almacenar --tipo-ingesta historica --fecha 2021-01-21T00:00:00.00 --bucket data-product-architecture-equipo8
 ```    
   Ingesta consecutiva: Es la descarga de los datos posteriores a la ingesta inicial hasta la fecha solicitada. Este archivo se guardara con el nombre `consecutiva-{fecha}.pkl`
 ```
-PYTHONPATH=$PWD luigi --module src.pipeline.almacenamiento almacenar --tipo-ingesta consecutiva --fecha 2021-03-17T00:00:00.00 --bucket data-product-architecture-equipo-8
+PYTHONPATH=$PWD luigi --module src.pipeline.almacenamiento almacenar --tipo-ingesta consecutiva --fecha 2021-03-17T00:00:00.00 --bucket data-product-architecture-equipo8
 ```
 
 5. Revisa dentro de tu bucket de aws que la información esté almacenada.
