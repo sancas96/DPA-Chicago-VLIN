@@ -82,3 +82,19 @@ def guardar_ingesta(data, bucket, bucket_path):
     """
     get_s3_resource().upload_fileobj(data, bucket, f"{bucket_path}{date.today()}.pkl")
     pass
+
+
+def get_service():
+
+    """
+    Esta función regresa,
+        esta funcion regresa los datos para ingresar a la rds
+    """
+    user = credentials['user']
+    password = credentials['password']
+    database = credentials['database']
+    host = credentials['host']
+    port = credentials['port']
+    service=get_service_file('conf/local/credentials.yaml')['service_file']
+    pass
+
