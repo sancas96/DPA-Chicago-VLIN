@@ -6,8 +6,8 @@ Repositorio para la clase de Arquitectura de Producto de Datos, primavera 2021-I
 |-------|-----------------|
 |Arenas Morales Nayeli | arenitss |
 |Hernández Martínez Luz Aurora | LuzVerde23 |
-|Sánchez Gutiérrez Vianney |visagu55 |
 |Santiago Castillejos Ita Andehui | sancas96 |
+|Sánchez Gutiérrez Vianney | visagu55 |
 
 # Summary de los datos: 📋
 
