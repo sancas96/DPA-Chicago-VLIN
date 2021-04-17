@@ -27,7 +27,7 @@ class ingestar(luigi.Task):
         client = Socrata(constants.url_api, token)
         
         if self.tipo_ingesta=='historica':
-            datos = client.get(constants.id_data_set, where = f"inspection_date<='{self.fecha}'")
+            datos = client.get(constants.id_data_set, where = f"inspection_date<='{self.fecha}'", limit = constants.limite_api)
             with self.output().open('w') as outfile:
                 pickle.dump(datos, outfile)
         else:
