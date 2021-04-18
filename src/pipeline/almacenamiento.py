@@ -3,8 +3,6 @@ import luigi.contrib.s3
 
 from src.pipeline.ingesta import ingestar
 from src.utils.general import *
-import src.utils.constants as constants
-
 
 class almacenar(luigi.Task):
     

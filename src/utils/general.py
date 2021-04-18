@@ -36,14 +36,14 @@ def get_api_token(credentials_file):
     token=read_yaml(credentials_file)['food_inspections']
     return token
 
-
-def get_service_file(credentials_file):
+def get_database_connection (credentials_file):
     """
         Esta función recibe como parámetro:
-            credentials_file: archivo generado por read_yaml.
+            credentials_file: archivo generado por read_yaml donde están nuestras credenciales.
 
-        Y regresa:
-            service_file: los datos para comunicarse con la base de datos.
+        Y regresa los parámetros para conectarse a la base de postgres:
+            user, password, database, host, port
         """
-    service=read_yaml(credentials_file)['chicago_food']
-    return service
+    database_params=read_yaml(credentials_file)['chicago_database']
+    return database_params
+
