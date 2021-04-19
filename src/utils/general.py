@@ -1,4 +1,5 @@
 import yaml
+import psycopg2
 
 def read_yaml(credentials_file):
     """
@@ -46,4 +47,30 @@ def get_database_connection (credentials_file):
         """
     database_params=read_yaml(credentials_file)['chicago_database']
     return database_params
+
+def query_database (consulta):
+    """
+        Esta función hace una consulta a la base de datos postgres y recibe como parámetro:
+            consulta: el texto de la consulta entre comillas y con punto y coma.
+
+        Y regresa:
+            Un objeto de lista con el resultado de la consulta ejecutada.
+        """
+    # Conectar a base de datos
+    db_creds = get_database_connection('conf/local/credentials.yaml')
+    conn = psycopg2.connect(f"dbname={db_creds['database']} user={db_creds['user']} password={db_creds['password']} host={db_creds['host']} port={db_creds['port']}")
+    cur = conn.cursor()
+    cur.execute(consulta)
+    resultado_consulta=list(cur.fetchall())
+    cur.close()
+    conn.close()
+    return resultado_consulta
+    
+
+    
+    
+
+
+
+
 

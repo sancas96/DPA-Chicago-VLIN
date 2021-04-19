@@ -1,4 +1,4 @@
-#EL OBJETIVO DE ESTE TASK SERÁ Limpiar el delta y meterlo a la RDS
+#Este task limpia el delta y lo mete a la RDS.
 import luigi
 import pickle
 import boto3
