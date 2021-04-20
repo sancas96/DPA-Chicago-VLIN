@@ -74,6 +74,13 @@ s3:
   aws_secret_access_key : "xxxxxx"
 food_inspections:
   api_token: "xxxxxxx"
+chicago_database:
+  user: "chicago_user"
+  password: "chicago_pass"
+  database: "chicago_db"
+  host: "localhost"
+  port: "5432"
+
 ```
 
 Donde las llaves de `s3` son para interactuar de manera más sencilla con el servicio de almacenamiento de archivos de `aws`.
@@ -86,12 +93,13 @@ El apartado de `food_inspections` contiene la llave `api_token` que es el token 
 ```
 3. Ejecutar `luigid` y en el navegador entrar a `http://localhost:8082/static/visualiser/index.html`
 
-4. Para la ingesta y almacenamiento ocuparemos como orquestador a [Luigi](https://luigi.readthedocs.io/en/stable/index.html). Tanto para la ingesta y almacenamiento, los parámetros para las tareas son los siguientes:
+4. Para la ingesta, almacenamiento, limpieza e ingeniería de características, ocuparemos como orquestador a [Luigi](https://luigi.readthedocs.io/en/stable/index.html). Para cada una de estas tareas los parametros necesarios pueden ser los siguientes:
 
     - **tipo_ingesta**: historica o consecutiva.
     - **fecha**: Fecha en la que se está haciendo la ingesta con respecto a inspection date.
     - **bucket**: nombre de tu bucket en `aws`.
 
+Para poder correr los siguientes comandos, primero en tu entorno RDS debemos tener el schema metadata, para esto puedes ocupar los scripts que se encuentran en la carpeta sql: `create_metadata_tables.sql`.
 
 La estructura desarrollada es la siguiente:
 
@@ -102,6 +110,30 @@ PYTHONPATH=$PWD luigi --module src.pipeline.almacenamiento almacenar --tipo-inge
   Ingesta consecutiva: Es la descarga de los datos posteriores a la ingesta inicial hasta la fecha solicitada. Este archivo se guardara con el nombre `consecutiva-{fecha}.pkl`
 ```
 PYTHONPATH=$PWD luigi --module src.pipeline.almacenamiento almacenar --tipo-ingesta consecutiva --fecha 2021-03-17T00:00:00.00 --bucket data-product-architecture-equipo8
+```
+Cada uno de estos ejemplos almacena también en un directorio la metadata de cada uno de los procesos -datos de los datos-
+
+Limpieza de datos: Con la base de datos obtenida en las tareas de ingestión y almacenamiento, hacemos un proceso de limpieza donde:
+
+  - Se eliminan los datos nulos de las variables `inspection_date`, `license_`, `latitude`, `longitude`,
+  - Se eligen solo los establecimientos que están en operación,
+  - Se eliminan los duplicados,
+  - Se sustituyen los datos nulos restantes con cero.
+
+Metadata de limpieza de datos: Guardamos la metadata generada por el proceso de limpieza.
+
+```
+#codigo limpieza y su metadata
+```
+Ingeniería de características: Con los datos limpios, corremos el proceso de ingeniería de características en donde:
+  - Convertimos la variable de infracciones en columnas de tipo dummy,
+  - Aplicamos label encoding (convertir a categorías numéricas variables categóricas de tipo string),
+  - Eliminamos las variables que no aportan información relevante al modelo.
+
+Metadata de ingeniería de características: Guardamos la metadata generada por el proceso de ingeniería de características.
+
+```
+#codigo ingeniería de características y su metadata
 ```
 
 5. Revisa dentro de tu bucket de aws que la información esté almacenada.
