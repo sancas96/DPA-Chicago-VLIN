@@ -24,7 +24,7 @@ class metadata_limpiar(CopyToTable):
     table = 'metadata.limpieza_metadata'
     columns = [
                 ('fecha_insercion', 'VARCHAR'),
-                ('num_registros', 'VARCHAR'),
+                ('num_registros', 'INTEGER'),
                 ('fecha_max', 'VARCHAR')
               ]
     
@@ -35,7 +35,7 @@ class metadata_limpiar(CopyToTable):
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         primer_metadata=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos
         segundo_metadata=query_database("SELECT count(*) from prueba2;")
-        tercer_metadata=query_database("SELECT max(col_11) from prueba2;")
+        tercer_metadata=query_database("SELECT max(inspection_date) from prueba2;")
         lista_metadata = [(primer_metadata[0], segundo_metadata[0][0], tercer_metadata[0][0])]
         print("########### ", lista_metadata)
         #Metemos la información en la base de datos        

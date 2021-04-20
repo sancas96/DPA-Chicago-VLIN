@@ -24,24 +24,24 @@ class limpiar(CopyToTable):
     
     table = 'prueba2'
     columns = [
-                ('col_1', 'VARCHAR'),
-                ('col_2', 'VARCHAR'),
-                ('col_3', 'VARCHAR'),
-                ('col_4', 'VARCHAR'),
-                ('col_5', 'VARCHAR'),
-                ('col_6', 'VARCHAR'),
-                ('col_7', 'VARCHAR'),
-                ('col_8', 'VARCHAR'),
-                ('col_9', 'VARCHAR'),
-                ('col_10', 'VARCHAR'),
-                ('col_11', 'VARCHAR'),
-                ('col_12', 'VARCHAR'),
-                ('col_13', 'VARCHAR'),
-                ('col_14', 'VARCHAR'),
-                ('col_15', 'VARCHAR'),
-                ('col_16', 'VARCHAR'),
-                ('col_17', 'VARCHAR'),
-                ('col_18', 'VARCHAR')
+                ('inspection_id', 'VARCHAR'),
+                ('dba_name', 'VARCHAR'),
+                ('aka_name', 'VARCHAR'),
+                ('license_', 'VARCHAR'),
+                ('facility_type', 'VARCHAR'),
+                ('risk', 'VARCHAR'),
+                ('address', 'VARCHAR'),
+                ('city', 'VARCHAR'),
+                ('state', 'VARCHAR'),
+                ('zip', 'VARCHAR'),
+                ('inspection_date', 'VARCHAR'),
+                ('inspection_type', 'VARCHAR'),
+                ('results', 'VARCHAR'),
+                ('violations', 'VARCHAR'),
+                ('latitude', 'VARCHAR'),
+                ('longitude', 'VARCHAR'),
+                ('location_latitude', 'VARCHAR'),
+                ('location_longitude', 'VARCHAR')
             ]
     
     def requires(self):

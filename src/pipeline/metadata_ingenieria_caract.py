@@ -1,100 +1,54 @@
-from datetime import date, timedelta
-from sodapy import Socrata
-from src.utils.general import *
-
-import src.utils.constants as constants
+#Este task inserta metadata para la parte de ingeniería de características, son 3 metadatas:
+#fecha de inserción, número de registros de la tabla, conteo de nulos en las columnas critical_count, serious_count, minor_count
+import luigi
 import pandas as pd
-import boto3
-import pickle
-import io
+from luigi.contrib.postgres import CopyToTable
+from src.utils.general import *
+from src.pipeline.ingenieria_caract import ingenieria
+from datetime import datetime
 
-
-def get_client():
-
-    """
-    Esta función regresa,
-        client: que es el cliente que se puede conectar a la API.
-    """
-
-    token=get_api_token('conf/local/credentials.yaml')['api_token']
-    client = Socrata(constants.url_api,token)
-    return client
-
-
-def get_s3_resource():
-
-    """
-    Esta función regresa,
-        s3: un resource de S3 para poder guardar datos en el bucket.
-    """
-
-    s3_creds= get_s3_credentials('conf/local/credentials.yaml')
-    session = boto3.Session(
-        aws_access_key_id=s3_creds['aws_access_key_id'],
-        aws_secret_access_key=s3_creds['aws_secret_access_key'])
-    s3 = session.client('s3')
-    return s3
-
-
-def ingesta_inicial(client,limite):
-    """
-    Esta función recibe como parámetros:
-        client: el cliente con el que nos podemos comunicar con la API,
-        limite: el límite de registros que queremos obtener al llamar a la API
-
-    Regresa:
-        datos_binario: una lista de los elementos que la API regresó.
-    """
-    datos=client.get(constants.id_data_set,limit=limite)
-    datos_binario=io.BytesIO()
-    pickle.dump(datos, datos_binario)
-    datos_binario.seek(0)
-    return datos_binario
-
+class metadata_ingenieria(CopyToTable):
+    #Pasando parámetros de las tareas anteriores
+    tipo_ingesta = luigi.Parameter() #Puede ser "historica" o "consecutiva".
+    fecha = luigi.Parameter() #Fecha en la que se está haciendo la ingesta con respecto a inspection date.
+    bucket = luigi.Parameter()
     
-def ingesta_consecutiva(client,fecha,limite, delta=True):
-    """
-    Esta función recibe como parámetros
-        client: el cliente con el que nos podemos comunicar con la API,
-        fecha: la fecha de la que se quieren obtener nuevos datos al llamar a la API,
-        limit: el límite de registros para obtener de regreso.
-    """
-    if delta == True:
-        today = date.today()
-        delta_date = today - timedelta(days=constants.dias_ingesta)
-        where = f"inspection_date>='{delta_date}'"
-        datos = client.get(constants.id_data_set, limit=limite, where=where)
-    else:
-        datos=client.get(constants.id_data_set, limit=limite, where=f"inspection_date='{fecha}'")
+    #Obteniendo las credenciales para conectarse a la base de datos de chicago
+    db_creds = get_database_connection('conf/local/credentials.yaml')
+    user = db_creds['user']
+    password = db_creds['password']
+    database = db_creds['database']
+    host = db_creds['host']
+    port = db_creds['port']
+    
+    #Tabla y columnas donde ingresará la metadata
+    table = 'metadata.ingenieria_metadata'
+    columns = [
+                ('fecha_insercion', 'VARCHAR'),
+                ('num_registros', 'INTEGER'),
+                ('critical_null', 'VARCHAR'),
+                ('serious_null', 'VARCHAR'),
+                ('minor_null', 'VARCHAR')
+              ]
+    
+    def requires(self):
+        return ingenieria(self.tipo_ingesta, self.fecha, self.bucket)    
+    
+    def rows(self):
 
-    datos_binario=io.BytesIO()
-    pickle.dump(datos, datos_binario)
-    datos_binario.seek(0)
-    return datos_binario
-
-
-def guardar_ingesta(data, bucket, bucket_path):
-    """
-    Esta función recibe como parámetros:
-        data: los datos ingestados en formato .pkl,
-        bucket: nombre del bucket de S3,
-        bucket_path: la ruta y nombre del bucket donde se guardarán los datos, la función agrega un sufijo con fecha de carga.
-    """
-    get_s3_resource().upload_fileobj(data, bucket, f"{bucket_path}{date.today()}.pkl")
-    pass
-
-
-def get_service():
-
-    """
-    Esta función regresa,
-        esta funcion regresa los datos para ingresar a la rds
-    """
-    user = credentials['user']
-    password = credentials['password']
-    database = credentials['database']
-    host = credentials['host']
-    port = credentials['port']
-    service=get_service_file('conf/local/credentials.yaml')['service_file']
-    pass
-
+        #Obtenemos el delta de los datos de ingeniería de características que está en la base de datos usando como parámetro el número de registros que se insertaron en la tarea que le precede.
+        datos_ingenieria= pd.DataFrame(query_database("SELECT * from prueba3 limit (select num_registros - lag(num_registros,1,0) over(order by num_registros)as resultado from metadata.limpieza_metadata order by fecha_insercion desc limit 1) offset (select (max(num_registros) - (select num_registros - lag(num_registros,1,0) over(order by num_registros)as resultado from metadata.limpieza_metadata order by fecha_insercion desc limit 1)) from metadata.limpieza_metadata);"))
+        datos_ingenieria.columns=[i[0] for i in query_database(f"SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='prueba3';")]
+        
+        date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        primer_metadata=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos
+        segundo_metadata=query_database("SELECT count(*) from prueba3;")
+        tercer_metadata=query_database("SELECT count(*) from prueba3 where critical_count is null;")
+        cuarto_metadata=query_database("SELECT count(*) from prueba3 where serious_count is null;")
+        quinto_metadata=query_database("SELECT count(*) from prueba3 where minor_count is null;")
+        lista_metadata = [(primer_metadata[0], segundo_metadata[0][0], tercer_metadata[0][0],cuarto_metadata[0][0],quinto_metadata[0][0])]
+        
+        
+        #Metemos la información en la base de datos        
+        for element in lista_metadata:
+            yield element
