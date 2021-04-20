@@ -1,12 +1,13 @@
-#Este task inserta metadata para la parte de la limpieza, son 3 metadatas:
-#fecha de inserción, número de registros de la tabla, fecha máxima de inspección en la base de chicago
+#Este task inserta metadata para la parte de la ingesta, son 3 metadatas:
+#fecha de inserción, tamaño del archivo, tipo de archivo
 import luigi
+import os
 from luigi.contrib.postgres import CopyToTable
 from src.utils.general import *
-from src.pipeline.limpieza import limpiar
-from datetime import datetime
+from src.pipeline.ingesta import ingestar
+from datetime import *
 
-class metadata_limpiar(CopyToTable):
+class metadata_ingestar(CopyToTable):
     #Parámetros de las tareas anteriores
     tipo_ingesta = luigi.Parameter() #Puede ser "historica" o "consecutiva".
     fecha = luigi.Parameter() #Fecha en la que se está haciendo la ingesta con respecto a inspection date.
@@ -21,23 +22,25 @@ class metadata_limpiar(CopyToTable):
     port = db_creds['port']
     
     #Tabla y columnas donde ingresará la metadata
-    table = 'metadata.metadata_limpieza'
+    table = 'metadata.metadata_ingesta'
     columns = [
                 ('fecha_insercion', 'VARCHAR'),
-                ('num_registros', 'INTEGER'),
-                ('fecha_max', 'VARCHAR')
+                ('nombre', 'VARCHAR'),
+                ('size', 'INTEGER'),
+                ('filetype', 'VARCHAR')
               ]
     
     def requires(self):
-        return limpiar(self.tipo_ingesta, self.fecha, self.bucket)    
+        return ingestar(self.tipo_ingesta, self.fecha, self.bucket)    
     
     def rows(self):
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         primer_metadata=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos
-        segundo_metadata=query_database("SELECT count(*) from data.limpieza;")
-        tercer_metadata=query_database("SELECT max(inspection_date) from data.limpieza;")
-        lista_metadata = [(primer_metadata[0], segundo_metadata[0][0], tercer_metadata[0][0])]
-        print("########### metadata_limpieza", lista_metadata)
+        segundo_metadata=f"{self.tipo_ingesta}-{self.fecha}.pkl"
+        tercer_metadata=os.path.getsize(f"./data/luigi/{self.tipo_ingesta}-{self.fecha}.pkl")
+        cuarto_metadata=os.path.splitext(f"./data/luigi/{self.tipo_ingesta}-{self.fecha}.pkl")[1]
+        lista_metadata = [(primer_metadata[0], segundo_metadata, tercer_metadata, cuarto_metadata)]
+        print("########### metadata_ingesta", lista_metadata)
         #Metemos la información en la base de datos        
         for element in lista_metadata:
             yield element

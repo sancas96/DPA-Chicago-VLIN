@@ -7,6 +7,7 @@ from luigi.contrib.postgres import CopyToTable
 from src.utils.general import *
 from src.utils.limpiar import *
 from src.pipeline.almacenamiento import almacenar
+from src.pipeline.metadata_almacenamiento import metadata_almacenar
 
 class limpiar(CopyToTable):
     #Parámetros de las tareas anteriores
@@ -22,7 +23,7 @@ class limpiar(CopyToTable):
     host = db_creds['host']
     port = db_creds['port']
     
-    table = 'prueba2'
+    table = 'data.limpieza'
     columns = [
                 ('inspection_id', 'VARCHAR'),
                 ('dba_name', 'VARCHAR'),
@@ -45,7 +46,7 @@ class limpiar(CopyToTable):
             ]
     
     def requires(self):
-        return almacenar(self.tipo_ingesta, self.fecha, self.bucket)    
+        return metadata_almacenar(self.tipo_ingesta, self.fecha, self.bucket)    
     
     def rows(self):
         #Generamos una conexión al bucket de s3
@@ -60,10 +61,18 @@ class limpiar(CopyToTable):
             
         with open('archivo_io', 'rb') as obtiene_datos:
             datos_pkl = pickle.load(obtiene_datos)
-    
+            
+#         with almacenar(self.tipo_ingesta, self.fecha, self.bucket).output().open() as infile, pd.DataFrame().open('w') as outfile:
+#             datos_pkl.write(infile.read())
+            
+ 
+            
         datos_dataframe=pd.json_normalize(datos_pkl)
+        print("########### limpieza", datos_dataframe)
         datos_limpieza=DataCleanning(datos_dataframe).cleanning()
+        print("########### limpieza", datos_dataframe)
         datos_lista=datos_limpieza.values.tolist()
+        print("########### limpieza", datos_lista)
 
         for element in datos_lista:
             yield element

@@ -42,8 +42,8 @@ class ingestar(luigi.Task):
             fecha_ultimo = max(lista_archivos, key=lambda x: x['LastModified'])['Key'][-26:-4]
             fecha_ultimo_formato = (datetime.strptime(fecha_ultimo, '%Y-%m-%dT%H:%M:%S.%f') +
                                     timedelta(days=1)).date()
-            print("########### ", fecha_ultimo)
-            print("########### ", fecha_ultimo_formato)
+            print("########### ingesta", fecha_ultimo)
+            print("########### ingesta", fecha_ultimo_formato)
             datos=client.get(constants.id_data_set,
                              where = f"inspection_date between '{fecha_ultimo_formato}' and '{self.fecha}'")
             with self.output().open('w') as outfile:

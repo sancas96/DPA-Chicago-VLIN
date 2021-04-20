@@ -20,7 +20,7 @@ class ingenieria(CopyToTable):
     host = db_creds['host']
     port = db_creds['port']
     
-    table = 'prueba3'
+    table = 'data.ingenieria'
     columns = [
                 ('dba_name', 'NUMERIC'),
                 ('license_', 'NUMERIC'),
@@ -86,9 +86,11 @@ class ingenieria(CopyToTable):
     
     def rows(self):
         #Obtenemos el delta de los datos de limpieza que está en la base de datos usando como parámetro el número de registros limpiados en la tarea anterior.
-        datos_limpios= pd.DataFrame(query_database("SELECT * from prueba2 limit (select num_registros - lag(num_registros,1,0) over(order by num_registros)as resultado from metadata.limpieza_metadata order by fecha_insercion desc limit 1) offset (select (max(num_registros) - (select num_registros - lag(num_registros,1,0) over(order by num_registros)as resultado from metadata.limpieza_metadata order by fecha_insercion desc limit 1)) from metadata.limpieza_metadata);"))
-        datos_limpios.columns=[i[0] for i in query_database(f"SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='prueba2';")]
+        datos_limpios= pd.DataFrame(query_database("SELECT * from data.limpieza limit (select num_registros - lag(num_registros,1,0) over(order by num_registros)as resultado from metadata.metadata_limpieza order by fecha_insercion desc limit 1) offset (select (max(num_registros) - (select num_registros - lag(num_registros,1,0) over(order by num_registros)as resultado from metadata.metadata_limpieza order by fecha_insercion desc limit 1)) from metadata.metadata_limpieza);"))
+        print("########### ingenieria_caract datos_limpios", len(datos_limpios))
+        datos_limpios.columns=[i[0] for i in query_database("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='limpieza';")]
         #Aplicando función de ingeniería de características.
+        print("########### ingenieria_caract", datos_limpios)
         datos_ingenieria=FeatureEngineering(datos_limpios).feature_engineering()
         
         #Obtenemos los datos

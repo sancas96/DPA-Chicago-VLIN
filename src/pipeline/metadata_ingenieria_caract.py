@@ -22,7 +22,7 @@ class metadata_ingenieria(CopyToTable):
     port = db_creds['port']
     
     #Tabla y columnas donde ingresará la metadata
-    table = 'metadata.ingenieria_metadata'
+    table = 'metadata.metadata_ingenieria'
     columns = [
                 ('fecha_insercion', 'VARCHAR'),
                 ('num_registros', 'INTEGER'),
@@ -37,15 +37,15 @@ class metadata_ingenieria(CopyToTable):
     def rows(self):
 
         #Obtenemos el delta de los datos de ingeniería de características que está en la base de datos usando como parámetro el número de registros que se insertaron en la tarea que le precede.
-        datos_ingenieria= pd.DataFrame(query_database("SELECT * from prueba3 limit (select num_registros - lag(num_registros,1,0) over(order by num_registros)as resultado from metadata.limpieza_metadata order by fecha_insercion desc limit 1) offset (select (max(num_registros) - (select num_registros - lag(num_registros,1,0) over(order by num_registros)as resultado from metadata.limpieza_metadata order by fecha_insercion desc limit 1)) from metadata.limpieza_metadata);"))
-        datos_ingenieria.columns=[i[0] for i in query_database(f"SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='prueba3';")]
+        datos_ingenieria= pd.DataFrame(query_database("SELECT * from data.ingenieria limit (select num_registros - lag(num_registros,1,0) over(order by num_registros)as resultado from metadata.metadata_limpieza order by fecha_insercion desc limit 1) offset (select (max(num_registros) - (select num_registros - lag(num_registros,1,0) over(order by num_registros)as resultado from metadata.metadata_limpieza order by fecha_insercion desc limit 1)) from metadata.metadata_limpieza);"))
+        datos_ingenieria.columns=[i[0] for i in query_database(f"SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='data.ingenieria';")]
         
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         primer_metadata=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos
-        segundo_metadata=query_database("SELECT count(*) from prueba3;")
-        tercer_metadata=query_database("SELECT count(*) from prueba3 where critical_count is null;")
-        cuarto_metadata=query_database("SELECT count(*) from prueba3 where serious_count is null;")
-        quinto_metadata=query_database("SELECT count(*) from prueba3 where minor_count is null;")
+        segundo_metadata=query_database("SELECT count(*) from data.ingenieria;")
+        tercer_metadata=query_database("SELECT count(*) from data.ingenieria where critical_count is null;")
+        cuarto_metadata=query_database("SELECT count(*) from data.ingenieria where serious_count is null;")
+        quinto_metadata=query_database("SELECT count(*) from data.ingenieria where minor_count is null;")
         lista_metadata = [(primer_metadata[0], segundo_metadata[0][0], tercer_metadata[0][0],cuarto_metadata[0][0],quinto_metadata[0][0])]
         
         
