@@ -99,7 +99,7 @@ El apartado de `food_inspections` contiene la llave `api_token` que es el token 
     - **fecha**: Fecha en la que se está haciendo la ingesta con respecto a inspection date.
     - **bucket**: nombre de tu bucket en `aws`.
 
-Para poder correr los siguientes comandos, primero en tu entorno RDS debemos tener el schema metadata, para esto puedes ocupar los scripts que se encuentran en la carpeta sql: `create_raw_tables.sql` y `create_schemas.sql`
+Para poder correr los siguientes comandos, primero en tu entorno RDS debemos tener el schema metadata, para esto puedes ocupar los scripts que se encuentran en la carpeta sql: `create_metadata_tables.sql`.
 
 La estructura desarrollada es la siguiente:
 
