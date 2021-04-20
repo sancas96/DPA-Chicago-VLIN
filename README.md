@@ -117,8 +117,8 @@ Limpieza de datos: Con la base de datos obtenida en las tareas de ingestión y a
 
   - Se eliminan los datos nulos de las variables `inspection_date`, `license_`, `latitude`, `longitude`,
   - Se eligen solo los establecimientos que están en operación,
-	- Se eliminan los duplicados
-	- Se sustituyen los datos nulos restantes con cero.
+  - Se eliminan los duplicados,
+  - Se sustituyen los datos nulos restantes con cero.
 
 Metadata de limpieza de datos: Guardamos la metadata generada por el proceso de limpieza.
 
