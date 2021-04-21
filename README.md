@@ -86,7 +86,7 @@ chicago_database:
 # Análisis Exploratorio ⌨️
 El notebook `Chicago_food_inspections.ipynb` con el análisis exploratorio se encuentra en la carpeta `notebooks/eda/`. Para este análisis se uso como información de corte el archivo .csv mencionado en el punto 1 del inciso anterior.
 
-# Ingestión, almacenamiento y su orquestado con Luigi 🛠️
+# Ingestión y almacenamiento orquestado con Luigi 🛠️
 1. Se asume que dentro de _aws_ se tenga levantado un bucket llamado `data-product-architecture-equipo8` con la siguiente estructura:
 ```
     ├── data-product-architecture-equipo8
