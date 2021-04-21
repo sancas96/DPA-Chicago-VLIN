@@ -51,22 +51,21 @@ Al 15 de enero de 2021 a las 7:39 p.m.
 
 # Reproducibilidad y requerimientos. ⚙️
 
-**Importante** Recordar que todo el proyecto debe ser ejecutado desde tu ambiente de trabajo seleccionado, ejecutando `pyenv activate <<tu_ambiente>>`
+**Importante** Este proyecto debe ser ejecutado desde el ambiente de trabajo seleccionado, ejecutando `pyenv activate <<tu_ambiente>>`
 
 Para este proyecto utilizamos la versioń **Python 3.7.4**
-1. En la carpeta data, colocar el archivo `Food_Inspections.csv` que está disponible en este [**Drive**](https://drive.google.com/file/d/1Pyobds5_o_4wKHbZQTsmzfVd-NszjEQM/view?usp=sharing)
-2. En tu ambiente virtual hay que instalar las librerías del archivo requirements.txt : `pip install -r requirements.txt`
+1. Para la reproducibilidad del análisis exploratorio de datos: en la carpeta data, colocar el archivo `Food_Inspections.csv` que está disponible en este [**Drive**](https://drive.google.com/file/d/1Pyobds5_o_4wKHbZQTsmzfVd-NszjEQM/view?usp=sharing)
+2. En el ambiente virtual hay que instalar las librerías del archivo requirements.txt que se encuentra dentro de este repositorio: `pip install -r requirements.txt`
 3. En la terminal debemos estar ubicados en la carpeta de este repositorio y ejecutar un `export PYTHONPATH=$PWD`
------
+4. Para poder tener el mismo esqueleto de la base de datos en postgress se debe crear un usuario y después crear la base de datos y darle los permisos correspondientes:
+`sudo -u postgres createuser --login --pwprompt chicago_user`
+`create database chicago_db;`
+`sudo -u postgres createdb --owner=chicago_user chicago_db`
+Después de este paso es necesario correr el script create_metadata_tables.sql que está en la ruta `sql`.
 
-# Análisis Exploratorio ⌨️
-El notebook `Chicago_food_inspections.ipynb` con el análisis exploratorio se encuentra en la carpeta `notebooks/eda/`.
-
-# Ingestión y almacenamiento automatizado con Luigi 🛠️
-
-**Nota:** Para la correcta ejecución de la ingestión y almacenamiento se actualizó el archivo `requirements.txt`.
-
-1. Para la ejecución de este checkpoint se asume que se tiene un archivo que se encuentra en la carpeta `conf/local/` con las credenciales de aws, este archivo deberá ser llamado `credentials.yaml` con el siguiente esqueleto:
+5. La carpeta `conf/local/` debe contener las credenciales para la conexión tanto a aws (s3), el token para obtener la información de la base de datos a la que nos estamos conectando (food_inspections) y las credenciales para la conexión a la base de datos relacional donde se guardará nuestra información. Donde las llaves de `s3` son para interactuar de manera más sencilla con el servicio de almacenamiento de archivos de `aws`.
+El apartado de `food_inspections` contiene la llave `api_token` que es el token generado desde [**aquí**](https://data.cityofchicago.org/login?return_to=%2Fprofile%2Fedit%2Fdeveloper_settings) que funcionará para hacer la ingestión de la API. Para más información se puede consultar [**aquí**](https://dev.socrata.com/foundry/data.cityofchicago.org/4ijn-s7e5).
+Este archivo deberá ser llamado `credentials.yaml` con el siguiente esqueleto.
 
 ```
 s3:
@@ -76,22 +75,24 @@ food_inspections:
   api_token: "xxxxxxx"
 chicago_database:
   user: "chicago_user"
-  password: "chicago_pass"
+  password: "xxxxxxx"
   database: "chicago_db"
   host: "localhost"
   port: "5432"
-
 ```
 
-Donde las llaves de `s3` son para interactuar de manera más sencilla con el servicio de almacenamiento de archivos de `aws`.
-El apartado de `food_inspections` contiene la llave `api_token` que es el token generado desde [**aquí**](https://data.cityofchicago.org/login?return_to=%2Fprofile%2Fedit%2Fdeveloper_settings) que funcionará para hacer la ingestión de la API. Para más información se puede consultar [**aquí**](https://dev.socrata.com/foundry/data.cityofchicago.org/4ijn-s7e5).
+-----
 
-2. De igual manera se asume que dentro de _aws_ se tenga levantado un bucket llamado `data-product-architecture-equipo8` con la siguiente estructura:
+# Análisis Exploratorio ⌨️
+El notebook `Chicago_food_inspections.ipynb` con el análisis exploratorio se encuentra en la carpeta `notebooks/eda/`. Para este análisis se uso como información de corte el archivo .csv mencionado en el punto 1 del inciso anterior.
+
+# Ingestión, almacenamiento y su orquestado con Luigi 🛠️
+1. Se asume que dentro de _aws_ se tenga levantado un bucket llamado `data-product-architecture-equipo8` con la siguiente estructura:
 ```
     ├── data-product-architecture-equipo8
     │   ├── ingesta    
 ```
-3. Ejecutar `luigid` y en el navegador entrar a `http://localhost:8082/static/visualiser/index.html`
+2. Ejecutar `luigid` y en el navegador entrar a `http://localhost:8082/static/visualiser/index.html`
 
 4. Para la ingesta, almacenamiento, limpieza e ingeniería de características, ocuparemos como orquestador a [Luigi](https://luigi.readthedocs.io/en/stable/index.html). Para cada una de estas tareas los parametros necesarios pueden ser los siguientes:
 
@@ -99,48 +100,52 @@ El apartado de `food_inspections` contiene la llave `api_token` que es el token 
     - **fecha**: Fecha en la que se está haciendo la ingesta con respecto a inspection date.
     - **bucket**: nombre de tu bucket en `aws`.
 
-Para poder correr los siguientes comandos, primero en tu entorno RDS debemos tener el schema metadata, para esto puedes ocupar los scripts que se encuentran en la carpeta sql: `create_metadata_tables.sql`.
-
 La estructura desarrollada es la siguiente:
 
-  Ingesta inicial: Con las credenciales que se dieron de alta para conectarnos a la API de _data.cityofchicago.org_, descargamos la base de datos disponible hasta la fecha. Este archivo se guardara con el nombre `historica-{fecha}.pkl`
+  Ingesta inicial y metadata: Con las credenciales que se dieron de alta para conectarnos a la API de _data.cityofchicago.org_, descargamos la base de datos disponible hasta la fecha. Este archivo se guardara con el nombre `historica-{fecha}.pkl`
 ```
-PYTHONPATH=$PWD luigi --module src.pipeline.almacenamiento almacenar --tipo-ingesta historica --fecha 2021-01-21T00:00:00.00 --bucket data-product-architecture-equipo8
+PYTHONPATH="." luigi --module src.pipeline.metadata_almacenamiento metadata_almacenar --tipo-ingesta historica --fecha 2021-03-29T00:00:00.00 --bucket data-product-architecture-equipo8
 ```    
   Ingesta consecutiva: Es la descarga de los datos posteriores a la ingesta inicial hasta la fecha solicitada. Este archivo se guardara con el nombre `consecutiva-{fecha}.pkl`
 ```
-PYTHONPATH=$PWD luigi --module src.pipeline.almacenamiento almacenar --tipo-ingesta consecutiva --fecha 2021-03-17T00:00:00.00 --bucket data-product-architecture-equipo8
+PYTHONPATH="." luigi --module src.pipeline.metadata_almacenamiento metadata_almacenar --tipo-ingesta consecutiva --fecha 2021-04-05T00:00:00.00 --bucket data-product-architecture-equipo8
 ```
-Cada uno de estos ejemplos almacena también en un directorio la metadata de cada uno de los procesos -datos de los datos-
+Cada uno de estos ejemplos almacena también la metadata de cada uno de los procesos, esto es en la tabla de rds metadata_ingesta y metadata_almacenar.
 
-Limpieza de datos: Con la base de datos obtenida en las tareas de ingestión y almacenamiento, hacemos un proceso de limpieza donde:
+# Limpieza de datos
+Con la base de datos obtenida en las tareas de ingestión y almacenamiento, hacemos un proceso de limpieza donde:
 
   - Se eliminan los datos nulos de las variables `inspection_date`, `license_`, `latitude`, `longitude`,
   - Se eligen solo los establecimientos que están en operación,
   - Se eliminan los duplicados,
   - Se sustituyen los datos nulos restantes con cero.
 
-Metadata de limpieza de datos: Guardamos la metadata generada por el proceso de limpieza.
+Metadata de limpieza de datos: Guardamos la metadata generada por el proceso de limpieza. Este es un ejemplo de cómo correrlo
+```
+PYTHONPATH="." luigi --module src.pipeline.metadata_limpieza metadata_limpiar --tipo-ingesta consecutiva --fecha 2021-04-12T00:00:00.00 --bucket data-product-architecture-equipo8
+```
+Este proceso genera las tablas data.limpieza, data.metadata_limpieza que contiene la tabla con esta limpieza y la metadata de la misma, respectivamente.
 
-```
-#codigo limpieza y su metadata
-```
-Ingeniería de características: Con los datos limpios, corremos el proceso de ingeniería de características en donde:
+# Ingeniería de características
+Con los datos limpios, corremos el proceso de ingeniería de características en donde:
   - Convertimos la variable de infracciones en columnas de tipo dummy,
   - Aplicamos label encoding (convertir a categorías numéricas variables categóricas de tipo string),
   - Eliminamos las variables que no aportan información relevante al modelo.
 
 Metadata de ingeniería de características: Guardamos la metadata generada por el proceso de ingeniería de características.
-
 ```
-#codigo ingeniería de características y su metadata
+PYTHONPATH="." luigi --module src.pipeline.metadata_ingenieria_caract metadata_ingenieria --tipo-ingesta consecutiva --fecha 2021-04-15T00:00:00.00 --bucket data-product-architecture-equipo8
 ```
+Este proceso genera las tablas data.ingenieria, data.metadata_ingenieria que contiene la tabla con esta ingeniería de características y la metadata de la misma, respectivamente.
 
-5. Revisa dentro de tu bucket de aws que la información esté almacenada.
+Si las sentencias anteriores se corren en el orden indicado, podremos ver un DAG de Luigi similar a este:
 
-Al terminar este proceso verificamos el DAG en Luigi.
+<img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/luigi_checkpoint4.png">
 
-<img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/dag_luigi.png">
+# Nota:
+Este producto de datos continua en desarrollo, por lo que aún faltan algunas mejoras,recomendaciones o mejores prácticas que se estarán atendiendo:
+- Las sentencias que se corren de luigi idealmente no deberían contener en la fecha el formato de tiempo.
+- Igualmente en la sentencia de luigi lo ideal sería no introducir un parámetro para el nombre del bucket e incluirlo como parte de una constante en el archivo constants.py
 
 
 # Bastión 📖
