@@ -14,6 +14,7 @@ class limpiar(CopyToTable):
     tipo_ingesta = luigi.Parameter() #Puede ser "historica" o "consecutiva".
     fecha = luigi.Parameter() #Fecha en la que se está haciendo la ingesta con respecto a inspection date.
     bucket = luigi.Parameter()
+    tamanio= luigi.IntParameter()
     
     #Obteniendo las credenciales para conectarse a la base de datos de chicago
     db_creds = get_database_connection('conf/local/credentials.yaml')
@@ -46,7 +47,7 @@ class limpiar(CopyToTable):
             ]
     
     def requires(self):
-        return metadata_almacenar(self.tipo_ingesta, self.fecha, self.bucket)    
+        return metadata_almacenar(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio)    
     
     def rows(self):
         #Generamos una conexión al bucket de s3

@@ -11,10 +11,11 @@ class almacenar(luigi.Task):
     tipo_ingesta = luigi.Parameter() #Puede ser histórica o consecutiva.
     fecha = luigi.Parameter() #Fecha en la que se está haciendo la ingesta con respecto a inspection date.
     bucket = luigi.Parameter()
+    tamanio= luigi.IntParameter()
 
 
     def requires(self):
-        return metadata_ingestar(self.tipo_ingesta, self.fecha, self.bucket)
+        return metadata_ingestar(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio)
         
 
     def run(self):
