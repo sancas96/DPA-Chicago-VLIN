@@ -1,13 +1,13 @@
-#Este código hace las pruebas unitarias de la limpieza, toma como entrada lo ingestado y como salida genera metadata de la prueba unitaria que en este caso son los parámetros insertados.
+#Este código hace las pruebas unitarias de la ingeniería de características, toma como entrada la base a la que se le hizo la ingeniería y como salida genera metadata de la prueba unitaria que en este caso son los parámetros de lugi.
 import luigi
 from luigi.contrib.postgres import CopyToTable
 from src.utils.general import *
 from src.utils.test_limpiar import *
-from src.pipeline.limpieza import limpiar
+from src.pipeline.ingenieria_caract import ingenieria
 from datetime import *
 import pandas as pd
 
-class test_limpiar(CopyToTable):
+class test_ingenieria(CopyToTable):
     #Parámetros de las tareas anteriores y se agrega uno nuevo
     tipo_ingesta = luigi.Parameter() #Puede ser "historica" o "consecutiva".
     fecha = luigi.Parameter() #Fecha en la que se está haciendo la ingesta con respecto a inspection date.
@@ -32,10 +32,10 @@ class test_limpiar(CopyToTable):
               ]
     
     def requires(self):
-        return limpiar(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio)
+        return ingenieria(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio,self.tipo_prueba)
     
     def rows(self):
-        datos = pd.DataFrame (query_database("select inspection_date from data.limpieza;"))
+        datos = pd.DataFrame (query_database("select dba_name, risk from data.ingenieria;"))
         
         #Esta es la prueba unitaria
         if self.tipo_prueba=="infinito":
@@ -46,7 +46,7 @@ class test_limpiar(CopyToTable):
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         primer_metadata=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos
         segundo_metadata=self.tipo_prueba
-        tercer_metadata="test_limpieza"
+        tercer_metadata="test_ingenieria"
         lista_metadata = [(primer_metadata[0], segundo_metadata, tercer_metadata)]
         
         #Metemos la información en la base de datos        

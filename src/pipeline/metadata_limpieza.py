@@ -3,14 +3,16 @@
 import luigi
 from luigi.contrib.postgres import CopyToTable
 from src.utils.general import *
-from src.pipeline.limpieza import limpiar
+from src.pipeline.test_limpieza import test_limpiar
 from datetime import datetime
 
 class metadata_limpiar(CopyToTable):
     #Parámetros de las tareas anteriores
-    tipo_ingesta = luigi.Parameter() #Puede ser "historica" o "consecutiva".
-    fecha = luigi.Parameter() #Fecha en la que se está haciendo la ingesta con respecto a inspection date.
+    tipo_ingesta = luigi.Parameter()
+    fecha = luigi.Parameter() 
     bucket = luigi.Parameter()
+    tamanio= luigi.IntParameter()
+    tipo_prueba= luigi.Parameter()
     
     #Obteniendo las credenciales para conectarse a la base de datos de chicago
     db_creds = get_database_connection('conf/local/credentials.yaml')
@@ -29,7 +31,7 @@ class metadata_limpiar(CopyToTable):
               ]
     
     def requires(self):
-        return limpiar(self.tipo_ingesta, self.fecha, self.bucket)    
+        return test_limpiar(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio, self.tipo_prueba)
     
     def rows(self):
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

@@ -11,6 +11,8 @@ class ingenieria(CopyToTable):
     tipo_ingesta = luigi.Parameter() #Puede ser "historica" o "consecutiva".
     fecha = luigi.Parameter() #Fecha en la que se está haciendo la ingesta con respecto a inspection date.
     bucket = luigi.Parameter()
+    tamanio = luigi.IntParameter()
+    tipo_prueba = luigi.Parameter()
     
     #Obteniendo las credenciales para conectarse a la base de datos de chicago
     db_creds = get_database_connection('conf/local/credentials.yaml')
@@ -82,7 +84,7 @@ class ingenieria(CopyToTable):
               ]
     
     def requires(self):
-        return metadata_limpiar(self.tipo_ingesta, self.fecha, self.bucket)    
+        return metadata_limpiar(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio, self.tipo_prueba)    
     
     def rows(self):
         #Obtenemos el delta de los datos de limpieza que está en la base de datos usando como parámetro el número de registros limpiados en la tarea anterior.

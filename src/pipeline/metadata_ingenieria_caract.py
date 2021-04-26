@@ -4,7 +4,7 @@ import luigi
 import pandas as pd
 from luigi.contrib.postgres import CopyToTable
 from src.utils.general import *
-from src.pipeline.ingenieria_caract import ingenieria
+from src.pipeline.test_ingenieria_caract import test_ingenieria
 from datetime import datetime
 
 class metadata_ingenieria(CopyToTable):
@@ -12,6 +12,8 @@ class metadata_ingenieria(CopyToTable):
     tipo_ingesta = luigi.Parameter() #Puede ser "historica" o "consecutiva".
     fecha = luigi.Parameter() #Fecha en la que se está haciendo la ingesta con respecto a inspection date.
     bucket = luigi.Parameter()
+    tamanio= luigi.IntParameter()
+    tipo_prueba= luigi.Parameter() #"infinito" o "shape"
     
     #Obteniendo las credenciales para conectarse a la base de datos de chicago
     db_creds = get_database_connection('conf/local/credentials.yaml')
@@ -32,7 +34,7 @@ class metadata_ingenieria(CopyToTable):
               ]
     
     def requires(self):
-        return ingenieria(self.tipo_ingesta, self.fecha, self.bucket)    
+        return test_ingenieria(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio, self.tipo_prueba)
     
     def rows(self):
 
