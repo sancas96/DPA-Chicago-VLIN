@@ -55,16 +55,36 @@ Al 15 de enero de 2021 a las 7:39 p.m.
 
 Para este proyecto utilizamos la versioń **Python 3.7.4**
 1. Para la reproducibilidad del análisis exploratorio de datos: en la carpeta data, colocar el archivo `Food_Inspections.csv` que está disponible en este [**Drive**](https://drive.google.com/file/d/1Pyobds5_o_4wKHbZQTsmzfVd-NszjEQM/view?usp=sharing)
-2. En el ambiente virtual hay que instalar las librerías del archivo requirements.txt que se encuentra dentro de este repositorio: `pip install -r requirements.txt`
-3. En la terminal debemos estar ubicados en la carpeta de este repositorio y ejecutar un `export PYTHONPATH=$PWD`
-4. Para poder tener el mismo esqueleto de la base de datos en postgress se debe crear un usuario y después crear la base de datos y darle los permisos correspondientes:
-`sudo -u postgres createuser --login --pwprompt chicago_user`
-`create database chicago_db;`
-`sudo -u postgres createdb --owner=chicago_user chicago_db`
-Después de este paso es necesario correr el script create_metadata_tables.sql que está en la ruta `sql`.
+2. Para la reproducibilidad de los `tasks` se creo la siguiente la infraestructura en AWS:
 
-5. La carpeta `conf/local/` debe contener las credenciales para la conexión tanto a aws (s3), el token para obtener la información de la base de datos a la que nos estamos conectando (food_inspections) y las credenciales para la conexión a la base de datos relacional donde se guardará nuestra información. Donde las llaves de `s3` son para interactuar de manera más sencilla con el servicio de almacenamiento de archivos de `aws`.
-El apartado de `food_inspections` contiene la llave `api_token` que es el token generado desde [**aquí**](https://data.cityofchicago.org/login?return_to=%2Fprofile%2Fedit%2Fdeveloper_settings) que funcionará para hacer la ingestión de la API. Para más información se puede consultar [**aquí**](https://dev.socrata.com/foundry/data.cityofchicago.org/4ijn-s7e5).
+ | **Bastión** | 
+ | Ubuntu Server 18.04| 
+ | 64 bits (x86) |
+ | t2.micro |
+ | Volumen 20 GiB |
+ 
+ | **EC2 de procesamiento** | 
+ | Ubuntu Server 18.04| 
+ | 64 bits (x86) |
+ | t2.medium |
+ | Volumen 80 GiB |
+ 
+3. En el ambiente virtual hay que instalar las librerías del archivo requirements.txt que se encuentra dentro de este repositorio: `pip install -r requirements.txt`
+4. En la terminal debemos estar ubicados en la carpeta de este repositorio y ejecutar un `export PYTHONPATH=$PWD`
+5. La características de la RDS creda en AWS son:
+ | **RDS** | 
+ | PostgreSQL 12.5-R1 | 
+ | db.t2.micro  |
+
+6. Para poder tener el mismo esqueleto de la base de datos en postgress se debe crear un usuario y después crear la base de datos y darle los permisos correspondientes:
+`sudo -u postgres createuser --login --pwprompt chicago_user`
+`create database chicago_food;`
+`sudo -u postgres createdb --owner=chicago_user chicago_food`
+Después de este paso es necesario crear los esquemas como se sugiere en el `script`  que está en la ruta `sql`.
+
+7. La carpeta `conf/local/` debe contener las credenciales para la conexión tanto a aws (s3), el token para obtener la información de la base de datos a la que nos estamos conectando (food_inspections) y las credenciales para la conexión a la base de datos relacional donde se guardará nuestra información. Donde las llaves de `s3` son para interactuar de manera más sencilla con el servicio de almacenamiento de archivos de `aws`. 
+Asimismo, la carpeta debe contener las credenciales para ingresar a la base de datos (RDS).
+El apartado de `food_inspections` debe contener la llave `api_token` que es el token generado desde [**aquí**](https://data.cityofchicago.org/login?return_to=%2Fprofile%2Fedit%2Fdeveloper_settings) que funcionará para hacer la ingestión de la API. Para más información se puede consultar [**aquí**](https://dev.socrata.com/foundry/data.cityofchicago.org/4ijn-s7e5).
 Este archivo deberá ser llamado `credentials.yaml` con el siguiente esqueleto.
 
 ```
@@ -74,10 +94,10 @@ s3:
 food_inspections:
   api_token: "xxxxxxx"
 chicago_database:
-  user: "chicago_user"
+  user: "chicago_food"
   password: "xxxxxxx"
-  database: "chicago_db"
-  host: "localhost"
+  database: "chicago_food"
+  host: "chicago-food-2021.ctd292l1zdjq.us-west-2.rds.amazonaws.com"
   port: "5432"
 ```
 
@@ -86,13 +106,20 @@ chicago_database:
 # Análisis Exploratorio ⌨️
 El notebook `Chicago_food_inspections.ipynb` con el análisis exploratorio se encuentra en la carpeta `notebooks/eda/`. Para este análisis se uso como información de corte el archivo .csv mencionado en el punto 1 del inciso anterior.
 
-# Ingestión y almacenamiento orquestado con Luigi 🛠️
+# Luigi 🛠️
+## Ingesta y almacenamiento
+
 1. Se asume que dentro de _aws_ se tenga levantado un bucket llamado `data-product-architecture-equipo8` con la siguiente estructura:
 ```
     ├── data-product-architecture-equipo8
     │   ├── ingesta    
 ```
-2. Ejecutar `luigid` y en el navegador entrar a `http://localhost:8082/static/visualiser/index.html`
+2. Para poder visualizar los ejercicios en EC2 de procesamiento se realiza un doble espejo: 
+ EC2 de procesamiento -> Bastión -> tu computadora 
+ En EC2 de procesamiento se ejecuta `luigid` 
+ En bastión realizas el primer `portforwdaring` ssh -i ~/.ssh/<<llave_privada>> -NL localhost:4444:localhost:8082 <<usuario>>@ip_del_ec2
+ En tu computadora realizas el segundo `portforwdaring` ssh -i ~/.ssh/<<llave_privada>>-NL localhost:4444:localhost:4444 <<usuario>>@ip_del_ec2
+ En el navegador entras a `http://localhost:8082/static/visualiser/index.html`
 
 4. Para la ingesta, almacenamiento, limpieza e ingeniería de características, ocuparemos como orquestador a [Luigi](https://luigi.readthedocs.io/en/stable/index.html). Para cada una de estas tareas los parametros necesarios pueden ser los siguientes:
 
