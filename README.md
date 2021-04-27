@@ -74,6 +74,7 @@ Para este proyecto utilizamos la versioń **Python 3.7.4**
 3. En el ambiente virtual hay que instalar las librerías del archivo requirements.txt que se encuentra dentro de este repositorio: `pip install -r requirements.txt`
 4. En la terminal debemos estar ubicados en la carpeta de este repositorio y ejecutar un `export PYTHONPATH=$PWD`
 5. La características de la RDS creda en AWS son:
+
  | **RDS** |
  |-------|
  | PostgreSQL 12.5-R1 | 
