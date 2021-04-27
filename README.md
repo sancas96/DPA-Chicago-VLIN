@@ -58,12 +58,14 @@ Para este proyecto utilizamos la versioń **Python 3.7.4**
 2. Para la reproducibilidad de los `tasks` se creo la siguiente la infraestructura en AWS:
 
  | **Bastión** | 
+ |-------|
  | Ubuntu Server 18.04| 
  | 64 bits (x86) |
  | t2.micro |
  | Volumen 20 GiB |
  
- | **EC2 de procesamiento** | 
+ | **EC2 de procesamiento** |
+ |-------|
  | Ubuntu Server 18.04| 
  | 64 bits (x86) |
  | t2.medium |
@@ -72,7 +74,8 @@ Para este proyecto utilizamos la versioń **Python 3.7.4**
 3. En el ambiente virtual hay que instalar las librerías del archivo requirements.txt que se encuentra dentro de este repositorio: `pip install -r requirements.txt`
 4. En la terminal debemos estar ubicados en la carpeta de este repositorio y ejecutar un `export PYTHONPATH=$PWD`
 5. La características de la RDS creda en AWS son:
- | **RDS** | 
+ | **RDS** |
+ |-------|
  | PostgreSQL 12.5-R1 | 
  | db.t2.micro  |
 
