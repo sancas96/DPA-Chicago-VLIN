@@ -1,13 +1,9 @@
-import pandas as pd
+import marbles.core
+from marbles.mixins import mixins
 
-class DataCleanning():
-    def __init__(self, dataframe):
-        self.dataframe = dataframe
-
-    def cleanning(self):
-        #self.dataframe.dropna(subset=["Inspection Date", "License #", "Latitude", "Longitude"], inplace=True)
-        limpieza_1=self.dataframe.dropna(subset=["inspection_date", "license_", "latitude", "longitude"])
-        limpieza_2=limpieza_1[~limpieza_1.results.isin(["Out of Business", "Business Not Located", "No Entry", "Not Ready"])]
-        limpieza_3=limpieza_2.drop_duplicates()
-        limpieza_4=limpieza_3.fillna(0)
-        return limpieza_4
+class test_entrena(marbles.core.TestCase, mixins.FileMixins):
+    
+    def test_tamanio(self, nombre_archivo, tamanio_archivo):
+        self.nombre_archivo=nombre_archivo
+        self.tamanio_archivo=tamanio_archivo
+        self.assertFileSizeGreater(self.nombre_archivo, self.tamanio_archivo, msg='El tamaño del archivo almacenado en S3 es muy pequeño')
