@@ -233,7 +233,7 @@ PYTHONPATH="." luigi --module src.pipeline.metadata_seleccion metadata_seleccion
 
 Si las sentencias anteriores se corren en el orden indicado, podremos ver un _DAG_ de Luigi similar a este:
 
-<img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/luigi_checkpoint5.png">
+<img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/luigi_checkoint5.png">
 
 # Notas:
 1. Este producto de datos continúa en desarrollo, por lo que aún faltan algunas mejoras,recomendaciones o mejores prácticas que se estarán atendiendo:
