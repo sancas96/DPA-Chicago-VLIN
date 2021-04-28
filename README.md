@@ -17,7 +17,7 @@ Datos:
 Al 15 de enero de 2021 a las 7:39 p.m.
   - Número de registros: 215,067
   - Número de columnas: 17
-  - Qué variables son, qué información tiene:
+  - La descripción de cada uno de los campos es la siguiente:
 
     - **Inspection ID**: Identificador consecutivo. Tipo numérico.
     - **DBA Name**: Acrónimo de 'Doing business as', que es el nombre legal del establecimiento. Tipo texto.
@@ -45,13 +45,15 @@ Al 15 de enero de 2021 a las 7:39 p.m.
     - **Longitude**: longitud del establecimiento. Tipo numérico.
     - **Location**: la latitud y longitud del establecimiento. Tipo localización.
 
-  - La pregunta analítica que queremos resolver es: ¿El establecimiento pasará o no la inspección?
+  - Para este producto de datos la pregunta analítica que queremos resolver es: ¿El establecimiento pasará o no la inspección?
   - Frecuencia de actualización de los datos: Diaria, aunque para efectos del proyecto será de manera semanal.
 
 
 # Reproducibilidad y requerimientos. ⚙️
 
 **Importante** Este proyecto debe ser ejecutado desde el ambiente de trabajo seleccionado, ejecutando `pyenv activate <<tu_ambiente>>`.
+
+# Infraestructura
 
 Para la infraestructura de este proyecto ocupamos la siguiente arquitectura:
 
@@ -66,11 +68,11 @@ Las cuales se iran ocupando a lo largo de esta lectura.
 
 Para este proyecto utilizamos la versioń **Python 3.7.4**
 1. Para la reproducibilidad del análisis exploratorio de datos: en la carpeta data, colocar el archivo `Food_Inspections.csv` que está disponible en este [**Drive**](https://drive.google.com/file/d/1Pyobds5_o_4wKHbZQTsmzfVd-NszjEQM/view?usp=sharing)
-2. Para la reproducibilidad de los _tasks_ se creo  la infraestructura en AWS ya mencionada, a la cual tendremos acceso con :
+2. Para la reproducibilidad de los _tasks_ se creo  la infraestructura en AWS ya mencionada, a la cual tendremos acceso primero a través de:
 
 #### Bastión 📖
 
-  Para tener acceso a cualquiera de estos (Bastión, EC2 y RDS) se requiere que el administrador les haya dado acceso a los mismos y tener un usuario asignado. Con lo anterior ya cumplido, hay que correr en su terminal lo siguiente:
+  Para tener acceso a cualquiera de estos (Bastión, EC2 y RDS) se requiere que el administrador les haya dado acceso a los servicios y tener un usuario asignado. Con lo anterior ya cumplido, hay que correr en la terminal lo siguiente:
 
 ```
     ssh -o ServerAliveInterval=60 -i ~/.ssh/<<llave_privada>> <<tu_usuario>>@ip_del_ec2
@@ -78,20 +80,20 @@ Para este proyecto utilizamos la versioń **Python 3.7.4**
 
 #### EC2 🔧
 
-  Aquí es donde se encuentra toda la estructura de este repositorio.
+  En esta máquina virtual se encuentra toda la estructura de este repositorio.
 
 ```
     ssh -o ServerAliveInterval=60 -i ~/.ssh/<<llave_privada>> <<tu_usuario>>@ip_del_ec2
 ```
 #### rds 📦
 
-  _Framework_ con los metadatas de almacenamiento y procesamiento
+  Base de datos que contiene las tablas de limpieza e ingeniería de características incluidos los metadatas de todas las tareas:
 
 ```
     psql -U chicago_food -h chicago-food-2021.ctd292l1zdjq.us-west-2.rds.amazonaws.com -d chicago_food
 ```
 
-3. En el ambiente virtual hay que instalar las librerías del archivo requirements.txt que se encuentra dentro de este repositorio: `pip install -r requirements.txt`
+3. En el ambiente virtual hay que instalar las librerías de python del archivo requirements.txt que se encuentra dentro de este repositorio: `pip install -r requirements.txt`
 4. En la terminal debemos estar ubicados en la carpeta de este repositorio y ejecutar un `export PYTHONPATH=$PWD`
 
 5. Para poder tener el mismo esqueleto de la base de datos en postgress se debe crear un usuario y después crear la base de datos y darle los permisos correspondientes:
@@ -100,11 +102,11 @@ Para este proyecto utilizamos la versioń **Python 3.7.4**
   create database chicago_food;
   sudo -u postgres createdb --owner=chicago_user chicago_food
 ```
-Después de este paso es necesario crear los esquemas como se sugiere en el `script`  que está en la ruta `sql`.
+Después de este paso es necesario crear los esquemas como se sugiere en el `script`  que está en la ruta `sql`. Las tablas que se van creando dentro de la base de datos se generan automáticamente corriendo las tareas de luigi.
 
 6. La carpeta `conf/local/` debe contener las credenciales para la conexión tanto al _bucket_ en aws (s3), el _token_ para obtener la información de la base de datos a la que nos estamos conectando (food_inspections) y las credenciales para la conexión a la base de datos relacional donde se guardará nuestra información.
 
-+ Las llaves de `s3` son para interactuar de manera más sencilla con el servicio de almacenamiento de archivos de `aws`.
++ Las llaves de `s3` son para interactuar de manera programática con el servicio de almacenamiento de archivos de `aws`.
 
 + El apartado de `food_inspections` debe contener la llave `api_token` que es el token generado desde [**aquí**](https://data.cityofchicago.org/login?return_to=%2Fprofile%2Fedit%2Fdeveloper_settings) que funcionará para hacer la ingestión de la API. Para más información se puede consultar [**aquí**](https://dev.socrata.com/foundry/data.cityofchicago.org/4ijn-s7e5).
 
@@ -125,10 +127,10 @@ chicago_database:
   host: "chicago-food-2021.ctd292l1zdjq.us-west-2.rds.amazonaws.com"
   port: "5432"
 ```
-
++ Esta es la arquitectura de la infraestructura usada en este producto de datos:
 <img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/ec2_security_groups.png">
 
-Tomado de [data-product-architecture](https://github.com/ITAM-DS/data-product-architecture)
+Referencia: [data-product-architecture](https://github.com/ITAM-DS/data-product-architecture)
 
 -----
 
@@ -141,7 +143,8 @@ El notebook `Chicago_food_inspections.ipynb` con el análisis exploratorio se en
 1. Se asume que dentro de _aws_ se tenga levantado un bucket llamado `data-product-architecture-equipo8` con la siguiente estructura:
 ```
     ├── data-product-architecture-equipo8
-    │   ├── ingesta    
+    │   ├── ingesta
+    |   ├── entrenamiento
 ```
 2. Para poder visualizar los ejercicios en EC2 de procesamiento se realiza un doble espejo que va de:
 ```
@@ -160,17 +163,17 @@ ssh -i ~/.ssh/<<llave_privada>>-NL localhost:4444:localhost:4444 <<usuario>>@ip_
 
 3. Luigi
 
-Para la ingesta, almacenamiento, limpieza, ingeniería de características, entrenamiento y selección del modelo ocuparemos como orquestador a [Luigi](https://luigi.readthedocs.io/en/stable/index.html). Para cada una de estas tareas los parametros necesarios pueden ser los siguientes:
+Para la ingesta, almacenamiento, limpieza, ingeniería de características, entrenamiento y selección del modelo ocuparemos como orquestador a [Luigi](https://luigi.readthedocs.io/en/stable/index.html). Para cada una de estas tareas los parámetros son los siguientes:
 
-- **tipo_ingesta**: historica o consecutiva.
-- **fecha**: Fecha en la que se está haciendo la ingesta con respecto a inspection date.
+- **tipo_ingesta**: los parámetros pueden ser "histórica" o "consecutiva".
+- **fecha**: Fecha en la que se está haciendo la ingesta con respecto a inspection date, el formato de está fecha es de esta forma: "yyyy-mm-ddT00:00:00.00".
 - **bucket**: nombre de tu bucket en `aws`.
-- **tamanio**: tamaño del archivo almacenado.
-- **tipo-prueba**: infinito o size
+- **tamanio**: tamaño del archivo almacenado. Este parámetro sirve para hacer la prueba unitaria, la prueba identifica si el archivo que se está almacenando es mayor que el número de bits que aquí se indiquen.
+- **tipo-prueba**: los parámetros pueden ser "infinito" o "size". Este parámetro puede hacer una prueba unitaria que busque si hay valores infinitos en la tabla o si el tamaño de la tabla es de cierta estructura.
 
 La estructura desarrollada es la siguiente:
 
-  Ingesta inicial y metadata: Con las credenciales que se dieron de alta para conectarnos a la API de _data.cityofchicago.org_, descargamos la base de datos disponible hasta la fecha. Este archivo se guardara con el nombre `historica-{fecha}.pkl`
+  Ingesta inicial y metadata: Con las credenciales que se dieron de alta para conectarnos a la API de _data.cityofchicago.org_, descargamos la base de datos disponible hasta la fecha. Este archivo se guardará con el nombre `historica-{fecha}.pkl`
 ```
 PYTHONPATH="." luigi --module src.pipeline.metadata_almacenamiento metadata_almacenar --tipo-ingesta historica --fecha 2021-03-29T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100
 ```    
@@ -178,21 +181,21 @@ PYTHONPATH="." luigi --module src.pipeline.metadata_almacenamiento metadata_alma
 ```
 PYTHONPATH="." luigi --module src.pipeline.metadata_almacenamiento metadata_almacenar --tipo-ingesta consecutiva --fecha 2021-04-05T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100
 ```
-Cada uno de estos ejemplos almacena también la _metadata_ de cada uno de los procesos, esto es en la tabla de _rds_ `metadata_ingesta` y `metadata_almacenar`.
+Cada uno de estos ejemplos almacenan también la _metadata_ de estas tareas, esto es en la tabla de _rds_ `metadata_ingesta` y `metadata_almacenar`.
 
 # Limpieza de datos
 Con la base de datos obtenida en las tareas de ingestión y almacenamiento, hacemos un proceso de limpieza donde:
 
   - Se eliminan los datos nulos de las variables `inspection_date`, `license_`, `latitude`, `longitude`,
-  - Se eligen solo los establecimientos que están en operación,
+  - Se eligen solo los establecimientos que están en operación al momento de hacer la inspección del mismo,
   - Se eliminan los duplicados,
   - Se sustituyen los datos nulos restantes con cero.
 
-Metadata de limpieza de datos: Guardamos la metadata generada por el proceso de limpieza. Este es un ejemplo de cómo correrlo
+Metadata de limpieza de datos: Guardamos la metadata generada por el proceso de limpieza. Este es un ejemplo de cómo correrlo:
 ```
 PYTHONPATH="." luigi --module src.pipeline.metadata_limpieza metadata_limpiar --tipo-ingesta consecutiva --fecha 2021-04-12T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
 ```
-Este proceso genera las tablas `data.limpieza`, `data.metadata_limpieza` que contiene la tabla con esta limpieza y la _metadata_ de la misma, respectivamente.
+Este proceso genera las tablas `data.limpieza`, `data.metadata_limpieza` que son las tablas con esta limpieza y la _metadata_ de la misma, respectivamente.
 
 # Ingeniería de características
 Con los datos limpios, corremos el proceso de ingeniería de características en donde:
@@ -200,11 +203,11 @@ Con los datos limpios, corremos el proceso de ingeniería de características en
   - Aplicamos label encoding (convertir a categorías numéricas variables categóricas de tipo string),
   - Eliminamos las variables que no aportan información relevante al modelo.
 
-Metadata de ingeniería de características: Guardamos la metadata generada por el proceso de ingeniería de características.
+Metadata de ingeniería de características: Guardamos la metadata generada por el proceso de ingeniería de características. Se corre de esta manera:
 ```
 PYTHONPATH="." luigi --module src.pipeline.metadata_ingenieria_caract metadata_ingenieria --tipo-ingesta consecutiva --fecha 2021-04-15T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
 ```
-Este proceso genera las tablas `data.ingenieria`, `data.metadata_ingenieria` que contiene la tabla con esta ingeniería de características y la _metadata_ de la misma, respectivamente.
+Este proceso genera las tablas `data.ingenieria`, `metadata.metadata_ingenieria` que contiene la tabla con la ingeniería de características y la _metadata_ de la misma, respectivamente.
 
 # Entrenamiento
 Con el dataset listo, se divide en entrenamiento y prueba, con porcentajes del 75% y 25% respectivamente. Se corren los siguientes tres modelos de clasificación haciendo uso de la librería _scikit learn_:
@@ -212,12 +215,14 @@ Con el dataset listo, se divide en entrenamiento y prueba, con porcentajes del 7
   - KNN,
   - Logistic Regression.
 
-De estos tres calculamos el _accuracy_ y guardamos cada modelo y sus parámetros en archivos pkl.
+De estos tres calculamos el _accuracy_ y guardamos los valores obtenidos de cada modelo y sus parámetros en archivos pkl en el S3.
 
-Metadata de entrenamiento de modelos: Guardamos la metadata generada por el proceso de entrenamiento.
+Metadata de entrenamiento de modelos: Guardamos la metadata generada por el proceso de entrenamiento:
 ```
 PYTHONPATH="." luigi --module src.pipeline.metadata_entrenamiento metadata_entrenar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
-
+```
+Para ejemplificar el funcionamiento de la prueba unitaria de entrenamiento podemos correr el código de abajo el cuál hará que falle la prueba unitaria, esto es debido al parámetro del tamanio el cual busca que los archivos sean muy grandes, el cual no es el caso. Esta tarea fallará:
+```
 PYTHONPATH="." luigi --module src.pipeline.test_entrenamiento test_entrenar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 1000000000 --tipo-prueba infinito
 ```
 
@@ -227,7 +232,9 @@ En esta parte se pretende tomar el modelo con el mejor _accuracy_, así que eleg
 Metadata de selección del modelo: Guardamos la metadata generada por el proceso de selección del modelo.
 ```
 PYTHONPATH="." luigi --module src.pipeline.metadata_seleccion metadata_seleccionar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
-
+```
+Para ejemplificar el funcionamiento de la prueba unitaria de selección podemos correr el código de abajo el cuál hará que falle la prueba unitaria, esto es debido al parámetro de tipo-prueba que busca una forma de (1x5) en la tabla cuando en realidad es diferente. Esta tarea fallará:
+```
 PYTHONPATH="." luigi --module src.pipeline.metadata_seleccion metadata_seleccionar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba shape
 ```
 
@@ -240,8 +247,7 @@ Si las sentencias anteriores se corren en el orden indicado, podremos ver un _DA
 - Las sentencias que se corren de luigi idealmente no deberían contener en la fecha el formato de tiempo.
 - Igualmente en la sentencia de luigi lo ideal sería no introducir un parámetro para el nombre del _bucket_ e incluirlo como parte de una constante en el archivo `constants.py`.
 
-
-2. El usuario lmillan ya fue asignado con la llave correspondiente.
+2. El usuario lmillan ya fue asignado con la llave correspondiente a toda la infraestructura.
 
 ---
 
