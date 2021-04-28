@@ -51,44 +51,65 @@ Al 15 de enero de 2021 a las 7:39 p.m.
 
 # Reproducibilidad y requerimientos. ⚙️
 
-**Importante** Este proyecto debe ser ejecutado desde el ambiente de trabajo seleccionado, ejecutando `pyenv activate <<tu_ambiente>>`
+**Importante** Este proyecto debe ser ejecutado desde el ambiente de trabajo seleccionado, ejecutando `pyenv activate <<tu_ambiente>>`.
+
+Para la infraestructura de este proyecto ocupamos la siguiente arquitectura:
+
+| **Bastión** | **EC2 de procesamiento** | **RDS** |
+|-------|-------| -------|
+| Ubuntu Server 18.04| Ubuntu Server 18.04| PostgreSQL 12.5-R1 |
+| 64 bits (x86) | 64 bits (x86) |
+| t2.micro | t2.medium | db.t2.micro  |
+| Volumen 20 GiB | Volumen 80 GiB |
+
+Las cuales se iran ocupando a lo largo de esta lectura.
 
 Para este proyecto utilizamos la versioń **Python 3.7.4**
 1. Para la reproducibilidad del análisis exploratorio de datos: en la carpeta data, colocar el archivo `Food_Inspections.csv` que está disponible en este [**Drive**](https://drive.google.com/file/d/1Pyobds5_o_4wKHbZQTsmzfVd-NszjEQM/view?usp=sharing)
-2. Para la reproducibilidad de los `tasks` se creo la siguiente la infraestructura en AWS:
+2. Para la reproducibilidad de los _tasks_ se creo  la infraestructura en AWS ya mencionada, a la cual tendremos acceso con :
 
- | **Bastión** | 
- |-------|
- | Ubuntu Server 18.04| 
- | 64 bits (x86) |
- | t2.micro |
- | Volumen 20 GiB |
- 
- | **EC2 de procesamiento** |
- |-------|
- | Ubuntu Server 18.04| 
- | 64 bits (x86) |
- | t2.medium |
- | Volumen 80 GiB |
- 
+#### Bastión 📖
+
+  Para tener acceso a cualquiera de estos (Bastión, EC2 y RDS) se requiere que el administrador les haya dado acceso a los mismos y tener un usuario asignado. Con lo anterior ya cumplido, hay que correr en su terminal lo siguiente:
+
+```
+    ssh -o ServerAliveInterval=60 -i ~/.ssh/<<llave_privada>> <<tu_usuario>>@ip_del_ec2
+```
+
+#### EC2 🔧
+
+  Aquí es donde se encuentra toda la estructura de este repositorio.
+
+```
+    ssh -o ServerAliveInterval=60 -i ~/.ssh/<<llave_privada>> <<tu_usuario>>@ip_del_ec2
+```
+#### rds 📦
+
+  _Framework_ con los metadatas de almacenamiento y procesamiento
+
+```
+    psql -U chicago_food -h chicago-food-2021.ctd292l1zdjq.us-west-2.rds.amazonaws.com -d chicago_food
+```
+
 3. En el ambiente virtual hay que instalar las librerías del archivo requirements.txt que se encuentra dentro de este repositorio: `pip install -r requirements.txt`
 4. En la terminal debemos estar ubicados en la carpeta de este repositorio y ejecutar un `export PYTHONPATH=$PWD`
-5. La características de la RDS creda en AWS son:
 
- | **RDS** |
- |-------|
- | PostgreSQL 12.5-R1 | 
- | db.t2.micro  |
-
-6. Para poder tener el mismo esqueleto de la base de datos en postgress se debe crear un usuario y después crear la base de datos y darle los permisos correspondientes:
-`sudo -u postgres createuser --login --pwprompt chicago_user`
-`create database chicago_food;`
-`sudo -u postgres createdb --owner=chicago_user chicago_food`
+5. Para poder tener el mismo esqueleto de la base de datos en postgress se debe crear un usuario y después crear la base de datos y darle los permisos correspondientes:
+```
+  sudo -u postgres createuser --login --pwprompt chicago_food
+  create database chicago_food;
+  sudo -u postgres createdb --owner=chicago_user chicago_food
+```
 Después de este paso es necesario crear los esquemas como se sugiere en el `script`  que está en la ruta `sql`.
 
-7. La carpeta `conf/local/` debe contener las credenciales para la conexión tanto a aws (s3), el token para obtener la información de la base de datos a la que nos estamos conectando (food_inspections) y las credenciales para la conexión a la base de datos relacional donde se guardará nuestra información. Donde las llaves de `s3` son para interactuar de manera más sencilla con el servicio de almacenamiento de archivos de `aws`. 
-Asimismo, la carpeta debe contener las credenciales para ingresar a la base de datos (RDS).
-El apartado de `food_inspections` debe contener la llave `api_token` que es el token generado desde [**aquí**](https://data.cityofchicago.org/login?return_to=%2Fprofile%2Fedit%2Fdeveloper_settings) que funcionará para hacer la ingestión de la API. Para más información se puede consultar [**aquí**](https://dev.socrata.com/foundry/data.cityofchicago.org/4ijn-s7e5).
+6. La carpeta `conf/local/` debe contener las credenciales para la conexión tanto al _bucket_ en aws (s3), el _token_ para obtener la información de la base de datos a la que nos estamos conectando (food_inspections) y las credenciales para la conexión a la base de datos relacional donde se guardará nuestra información.
+
++ Las llaves de `s3` son para interactuar de manera más sencilla con el servicio de almacenamiento de archivos de `aws`.
+
++ El apartado de `food_inspections` debe contener la llave `api_token` que es el token generado desde [**aquí**](https://data.cityofchicago.org/login?return_to=%2Fprofile%2Fedit%2Fdeveloper_settings) que funcionará para hacer la ingestión de la API. Para más información se puede consultar [**aquí**](https://dev.socrata.com/foundry/data.cityofchicago.org/4ijn-s7e5).
+
++ Asimismo, la carpeta debe contener las credenciales para ingresar a la base de datos (RDS).
+
 Este archivo deberá ser llamado `credentials.yaml` con el siguiente esqueleto.
 
 ```
@@ -105,6 +126,10 @@ chicago_database:
   port: "5432"
 ```
 
+<img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/ec2_security_groups.png">
+
+Tomado de [data-product-architecture](https://github.com/ITAM-DS/data-product-architecture)
+
 -----
 
 # Análisis Exploratorio ⌨️
@@ -118,30 +143,42 @@ El notebook `Chicago_food_inspections.ipynb` con el análisis exploratorio se en
     ├── data-product-architecture-equipo8
     │   ├── ingesta    
 ```
-2. Para poder visualizar los ejercicios en EC2 de procesamiento se realiza un doble espejo: 
- EC2 de procesamiento -> Bastión -> tu computadora 
- En EC2 de procesamiento se ejecuta `luigid` 
- En bastión realizas el primer `portforwdaring` ssh -i ~/.ssh/<<llave_privada>> -NL localhost:4444:localhost:8082 <<usuario>>@ip_del_ec2
- En tu computadora realizas el segundo `portforwdaring` ssh -i ~/.ssh/<<llave_privada>>-NL localhost:4444:localhost:4444 <<usuario>>@ip_del_ec2
- En el navegador entras a `http://localhost:8082/static/visualiser/index.html`
+2. Para poder visualizar los ejercicios en EC2 de procesamiento se realiza un doble espejo que va de:
+```
+        EC2 de procesamiento -> Bastión -> tu computadora
+```
++ En EC2 de procesamiento se ejecuta `luigid`.
++ En bastión realizas el primer _portforwdaring_:
+```
+ssh -i ~/.ssh/<<llave_privada>> -NL localhost:4444:localhost:8082 <<usuario>>@ip_del_ec2
+```
++ En tu computadora realizas el segundo _portforwdaring_:
+```
+ssh -i ~/.ssh/<<llave_privada>>-NL localhost:4444:localhost:4444 <<usuario>>@ip_del_ec2
+```
+ En el navegador entras a [http://localhost:4444](http://localhost:4444)
 
-4. Para la ingesta, almacenamiento, limpieza e ingeniería de características, ocuparemos como orquestador a [Luigi](https://luigi.readthedocs.io/en/stable/index.html). Para cada una de estas tareas los parametros necesarios pueden ser los siguientes:
+3. Luigi
 
-    - **tipo_ingesta**: historica o consecutiva.
-    - **fecha**: Fecha en la que se está haciendo la ingesta con respecto a inspection date.
-    - **bucket**: nombre de tu bucket en `aws`.
+Para la ingesta, almacenamiento, limpieza, ingeniería de características, entrenamiento y selección del modelo ocuparemos como orquestador a [Luigi](https://luigi.readthedocs.io/en/stable/index.html). Para cada una de estas tareas los parametros necesarios pueden ser los siguientes:
+
+- **tipo_ingesta**: historica o consecutiva.
+- **fecha**: Fecha en la que se está haciendo la ingesta con respecto a inspection date.
+- **bucket**: nombre de tu bucket en `aws`.
+- **tamanio**: tamaño del archivo almacenado.
+- **tipo-prueba**: infinito o size
 
 La estructura desarrollada es la siguiente:
 
   Ingesta inicial y metadata: Con las credenciales que se dieron de alta para conectarnos a la API de _data.cityofchicago.org_, descargamos la base de datos disponible hasta la fecha. Este archivo se guardara con el nombre `historica-{fecha}.pkl`
 ```
-PYTHONPATH="." luigi --module src.pipeline.metadata_almacenamiento metadata_almacenar --tipo-ingesta historica --fecha 2021-03-29T00:00:00.00 --bucket data-product-architecture-equipo8
+PYTHONPATH="." luigi --module src.pipeline.metadata_almacenamiento metadata_almacenar --tipo-ingesta historica --fecha 2021-03-29T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100
 ```    
   Ingesta consecutiva: Es la descarga de los datos posteriores a la ingesta inicial hasta la fecha solicitada. Este archivo se guardara con el nombre `consecutiva-{fecha}.pkl`
 ```
-PYTHONPATH="." luigi --module src.pipeline.metadata_almacenamiento metadata_almacenar --tipo-ingesta consecutiva --fecha 2021-04-05T00:00:00.00 --bucket data-product-architecture-equipo8
+PYTHONPATH="." luigi --module src.pipeline.metadata_almacenamiento metadata_almacenar --tipo-ingesta consecutiva --fecha 2021-04-05T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100
 ```
-Cada uno de estos ejemplos almacena también la metadata de cada uno de los procesos, esto es en la tabla de rds metadata_ingesta y metadata_almacenar.
+Cada uno de estos ejemplos almacena también la _metadata_ de cada uno de los procesos, esto es en la tabla de _rds_ `metadata_ingesta` y `metadata_almacenar`.
 
 # Limpieza de datos
 Con la base de datos obtenida en las tareas de ingestión y almacenamiento, hacemos un proceso de limpieza donde:
@@ -153,9 +190,9 @@ Con la base de datos obtenida en las tareas de ingestión y almacenamiento, hace
 
 Metadata de limpieza de datos: Guardamos la metadata generada por el proceso de limpieza. Este es un ejemplo de cómo correrlo
 ```
-PYTHONPATH="." luigi --module src.pipeline.metadata_limpieza metadata_limpiar --tipo-ingesta consecutiva --fecha 2021-04-12T00:00:00.00 --bucket data-product-architecture-equipo8
+PYTHONPATH="." luigi --module src.pipeline.metadata_limpieza metadata_limpiar --tipo-ingesta consecutiva --fecha 2021-04-12T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
 ```
-Este proceso genera las tablas data.limpieza, data.metadata_limpieza que contiene la tabla con esta limpieza y la metadata de la misma, respectivamente.
+Este proceso genera las tablas `data.limpieza`, `data.metadata_limpieza` que contiene la tabla con esta limpieza y la _metadata_ de la misma, respectivamente.
 
 # Ingeniería de características
 Con los datos limpios, corremos el proceso de ingeniería de características en donde:
@@ -165,25 +202,34 @@ Con los datos limpios, corremos el proceso de ingeniería de características en
 
 Metadata de ingeniería de características: Guardamos la metadata generada por el proceso de ingeniería de características.
 ```
-PYTHONPATH="." luigi --module src.pipeline.metadata_ingenieria_caract metadata_ingenieria --tipo-ingesta consecutiva --fecha 2021-04-15T00:00:00.00 --bucket data-product-architecture-equipo8
+PYTHONPATH="." luigi --module src.pipeline.metadata_ingenieria_caract metadata_ingenieria --tipo-ingesta consecutiva --fecha 2021-04-15T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
 ```
-Este proceso genera las tablas data.ingenieria, data.metadata_ingenieria que contiene la tabla con esta ingeniería de características y la metadata de la misma, respectivamente.
+Este proceso genera las tablas `data.ingenieria`, `data.metadata_ingenieria` que contiene la tabla con esta ingeniería de características y la _metadata_ de la misma, respectivamente.
 
-Si las sentencias anteriores se corren en el orden indicado, podremos ver un DAG de Luigi similar a este:
+# Entrenamiento
+
+```
+PYTHONPATH="." luigi --module src.pipeline.metadata_entrenamiento metadata_entrenar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
+
+PYTHONPATH="." luigi --module src.pipeline.test_entrenamiento test_entrenar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 1000000000 --tipo-prueba infinito
+```
+
+# Selección de modelo
+```
+PYTHONPATH="." luigi --module src.pipeline.metadata_seleccion metadata_seleccionar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
+
+PYTHONPATH="." luigi --module src.pipeline.metadata_seleccion metadata_seleccionar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba shape
+```
+
+Si las sentencias anteriores se corren en el orden indicado, podremos ver un _DAG_ de Luigi similar a este:
 
 <img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/luigi_checkpoint4.png">
 
 # Nota:
 Este producto de datos continúa en desarrollo, por lo que aún faltan algunas mejoras,recomendaciones o mejores prácticas que se estarán atendiendo:
 - Las sentencias que se corren de luigi idealmente no deberían contener en la fecha el formato de tiempo.
-- Igualmente en la sentencia de luigi lo ideal sería no introducir un parámetro para el nombre del bucket e incluirlo como parte de una constante en el archivo constants.py
+- Igualmente en la sentencia de luigi lo ideal sería no introducir un parámetro para el nombre del _bucket_ e incluirlo como parte de una constante en el archivo `constants.py`.
 
-
-# Bastión 📖
-
-Para tener acceso al Bastión se requiere que el administrador le haya dado acceso al mismo y tener un usuario asignado y correr en su terminal lo siguiente:
-
-    `ssh -i <<llave_privada>> <<usuario>>@ip_del_ec2`
 
 **Nota:** El usuario lmillan ya fue asignado con la llave correspondiente.
 
