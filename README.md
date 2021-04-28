@@ -235,13 +235,13 @@ Si las sentencias anteriores se corren en el orden indicado, podremos ver un _DA
 
 <img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/luigi_checkpoint4.png">
 
-# Nota:
-Este producto de datos continúa en desarrollo, por lo que aún faltan algunas mejoras,recomendaciones o mejores prácticas que se estarán atendiendo:
+# Notas:
+1. Este producto de datos continúa en desarrollo, por lo que aún faltan algunas mejoras,recomendaciones o mejores prácticas que se estarán atendiendo:
 - Las sentencias que se corren de luigi idealmente no deberían contener en la fecha el formato de tiempo.
 - Igualmente en la sentencia de luigi lo ideal sería no introducir un parámetro para el nombre del _bucket_ e incluirlo como parte de una constante en el archivo `constants.py`.
 
 
-**Nota:** El usuario lmillan ya fue asignado con la llave correspondiente.
+2. El usuario lmillan ya fue asignado con la llave correspondiente.
 
 ---
 
