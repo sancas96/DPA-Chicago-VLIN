@@ -207,7 +207,14 @@ PYTHONPATH="." luigi --module src.pipeline.metadata_ingenieria_caract metadata_i
 Este proceso genera las tablas `data.ingenieria`, `data.metadata_ingenieria` que contiene la tabla con esta ingeniería de características y la _metadata_ de la misma, respectivamente.
 
 # Entrenamiento
+Con el dataset listo, se divide en entrenamiento y prueba, con porcentajes del 75% y 25% respectivamente. Se corren los siguientes tres modelos de clasificación haciendo uso de la librería _scikit learn_:
+  - XGboost,
+  - KNN,
+  - Logistic Regression.
 
+De estos tres calculamos el _accuracy_ y guardamos cada modelo y sus parámetros en archivos pkl.
+
+Metadata de entrenamiento de modelos: Guardamos la metadata generada por el proceso de entrenamiento.
 ```
 PYTHONPATH="." luigi --module src.pipeline.metadata_entrenamiento metadata_entrenar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
 
@@ -215,6 +222,9 @@ PYTHONPATH="." luigi --module src.pipeline.test_entrenamiento test_entrenar --ti
 ```
 
 # Selección de modelo
+En esta parte se pretende tomar el modelo con el mejor _accuracy_, así que elegimos el máximo _accuracy_ de los 3 modelos de entrenamiento.
+
+Metadata de selección del modelo: Guardamos la metadata generada por el proceso de selección del modelo.
 ```
 PYTHONPATH="." luigi --module src.pipeline.metadata_seleccion metadata_seleccionar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
 
