@@ -38,33 +38,32 @@ class metadata_entrenar(CopyToTable):
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         primer_metadata1=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos
         segundo_metadata1='modelo_xgb'
-        with open('data/entrenamiento_xgb_parametros.pkl', 'rb') as pickle_file:
-             tercer_metadata1 = pickle.load(pickle_file)
-        
+#         with open('data/entrenamiento_xgb_parametros.pkl', 'rb') as pickle_file:
+#              tercer_metadata1 = pickle.load(pickle_file)
+        tercer_metadata1 = pickle.load(open('data/entrenamiento_xgb.pkl', 'rb')).get_params()
+
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         primer_metadata2=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos
         segundo_metadata2='modelo_lr'
-        with open('data/entrenamiento_lr_parametros.pkl', 'rb') as pickle_file:
-            tercer_metadata2 = pickle.load(pickle_file)
+        tercer_metadata2 = pickle.load(open('data/entrenamiento_lr.pkl', 'rb')).get_params()
             
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         primer_metadata3=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos
         segundo_metadata3='modelo_knn'
-        with open('data/entrenamiento_knn_parametros.pkl', 'rb') as pickle_file:
-            tercer_metadata3 = pickle.load(pickle_file)
+        tercer_metadata3 = pickle.load(open('data/entrenamiento_knn.pkl', 'rb')).get_params()
             
-        date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        primer_metadata4=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos
-        segundo_metadata4='modelos_precisiones'
-        with open('data/precision_modelos.pkl', 'rb') as pickle_file:
-            tercer_metadata4 = pickle.load(pickle_file)
+#         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+#         primer_metadata4=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos
+#         segundo_metadata4='modelos_precisiones'
+#         with open('data/precision_modelos.pkl', 'rb') as pickle_file:
+#             tercer_metadata4 = pickle.load(pickle_file)
         
 
         lista_metadata = [
                             (primer_metadata1[0], segundo_metadata1, tercer_metadata1),
                             (primer_metadata2[0], segundo_metadata2, tercer_metadata2),
-                            (primer_metadata3[0], segundo_metadata3, tercer_metadata3),
-                            (primer_metadata4[0], segundo_metadata4, tercer_metadata4)
+                            (primer_metadata3[0], segundo_metadata3, tercer_metadata3)
+#                             (primer_metadata4[0], segundo_metadata4, tercer_metadata4)
                          ]
         
         #Metemos la información en la base de datos        

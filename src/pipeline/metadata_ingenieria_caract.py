@@ -39,8 +39,8 @@ class metadata_ingenieria(CopyToTable):
     def rows(self):
 
         #Obtenemos el delta de los datos de ingeniería de características que está en la base de datos usando como parámetro el número de registros que se insertaron en la tarea que le precede.
-        datos_ingenieria= pd.DataFrame(query_database("SELECT * from data.ingenieria limit (select num_registros - lag(num_registros,1,0) over(order by num_registros)as resultado from metadata.metadata_limpieza order by fecha_insercion desc limit 1) offset (select (max(num_registros) - (select num_registros - lag(num_registros,1,0) over(order by num_registros)as resultado from metadata.metadata_limpieza order by fecha_insercion desc limit 1)) from metadata.metadata_limpieza);"))
-        datos_ingenieria.columns=[i[0] for i in query_database(f"SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='data.ingenieria';")]
+        datos_ingenieria= pd.DataFrame(query_database("SELECT * from data.ingenieria;"))
+        datos_ingenieria.columns=[i[0] for i in query_database(f"SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='ingenieria';")]
         
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         primer_metadata=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos

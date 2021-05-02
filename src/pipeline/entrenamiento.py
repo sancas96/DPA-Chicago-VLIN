@@ -37,17 +37,17 @@ class entrenar(luigi.Task):
         with open('data/entrenamiento_knn.pkl','rb') as infile, self.output()['outfile_knn'].open('w') as outfile:
             outfile.write(infile.read())
             
-        with open('data/entrenamiento_xgb_parametros.pkl','rb') as infile, self.output()['params_xgb'].open('w') as outfile:
-            outfile.write(infile.read())
+#         with open('data/entrenamiento_xgb_parametros.pkl','rb') as infile, self.output()['params_xgb'].open('w') as outfile:
+#             outfile.write(infile.read())
             
-        with open('data/entrenamiento_lr_parametros.pkl','rb') as infile, self.output()['params_lr'].open('w') as outfile:
-            outfile.write(infile.read())
+#         with open('data/entrenamiento_lr_parametros.pkl','rb') as infile, self.output()['params_lr'].open('w') as outfile:
+#             outfile.write(infile.read())
         
-        with open('data/entrenamiento_knn_parametros.pkl','rb') as infile, self.output()['params_knn'].open('w') as outfile:
-            outfile.write(infile.read())
+#         with open('data/entrenamiento_knn_parametros.pkl','rb') as infile, self.output()['params_knn'].open('w') as outfile:
+#             outfile.write(infile.read())
             
-        with open('data/precision_modelos.pkl','rb') as infile, self.output()['precision_modelos'].open('w') as outfile:
-            outfile.write(infile.read())
+#         with open('data/precision_modelos.pkl','rb') as infile, self.output()['precision_modelos'].open('w') as outfile:
+#             outfile.write(infile.read())
         
             
     def output(self):
@@ -57,9 +57,10 @@ class entrenar(luigi.Task):
         return {
                     'outfile_xgb' : luigi.contrib.s3.S3Target(path=output_path + "-modelo_xgb.pkl",client=cliente_s3,format=luigi.format.Nop), \
                     'outfile_lr' : luigi.contrib.s3.S3Target(path=output_path + "-modelo_lr.pkl",client=cliente_s3,format=luigi.format.Nop), \
-                    'outfile_knn' : luigi.contrib.s3.S3Target(path=output_path + "-modelo_knn.pkl",client=cliente_s3,format=luigi.format.Nop), \
-                    'params_xgb' : luigi.contrib.s3.S3Target(path=output_path + "-modelo_xgb_params.pkl",client=cliente_s3,format=luigi.format.Nop), \
-                    'params_lr' : luigi.contrib.s3.S3Target(path=output_path + "-modelo_lr_params.pkl",client=cliente_s3,format=luigi.format.Nop), \
-                    'params_knn' : luigi.contrib.s3.S3Target(path=output_path + "-modelo_knn_params.pkl",client=cliente_s3,format=luigi.format.Nop), \
-                    'precision_modelos' : luigi.contrib.s3.S3Target(path=output_path + "-precision_modelos.pkl",client=cliente_s3,format=luigi.format.Nop)
+                    'outfile_knn' : luigi.contrib.s3.S3Target(path=output_path + "-modelo_knn.pkl",client=cliente_s3,format=luigi.format.Nop)
+#             , \
+#                     'params_xgb' : luigi.contrib.s3.S3Target(path=output_path + "-modelo_xgb_params.pkl",client=cliente_s3,format=luigi.format.Nop), \
+#                     'params_lr' : luigi.contrib.s3.S3Target(path=output_path + "-modelo_lr_params.pkl",client=cliente_s3,format=luigi.format.Nop), \
+#                     'params_knn' : luigi.contrib.s3.S3Target(path=output_path + "-modelo_knn_params.pkl",client=cliente_s3,format=luigi.format.Nop), \
+#                     'precision_modelos' : luigi.contrib.s3.S3Target(path=output_path + "-precision_modelos.pkl",client=cliente_s3,format=luigi.format.Nop)
                }

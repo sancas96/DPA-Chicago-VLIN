@@ -6,8 +6,6 @@ from src.utils.test_seleccionar import *
 from src.pipeline.seleccion import seleccionar
 from datetime import *
 import pandas as pd
-import boto3
-import pickle
 
 class test_seleccionar(CopyToTable):
     #Parámetros de las tareas anteriores y se agrega uno nuevo
@@ -37,21 +35,7 @@ class test_seleccionar(CopyToTable):
         return seleccionar(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio,self.tipo_prueba)
     
     def rows(self):
-        s3_creds = get_s3_credentials('conf/local/credentials.yaml')
-        session = boto3.Session(aws_access_key_id=s3_creds['aws_access_key_id'],
-                                    aws_secret_access_key=s3_creds['aws_secret_access_key'])
-        cliente_s3 = session.client('s3')
-        objeto_s3 = cliente_s3.get_object(
-                                            Bucket=self.bucket,
-                                            Key=f'seleccion/{self.fecha}-MejorModelo.pkl'
-                                         )
-        contenido_objeto=objeto_s3['Body'].read()
-        datos_selecc= pd.DataFrame(query_database("SELECT * from data.ingenieria;"))
-        datos_selecc.columns=[i[0] for i in query_database("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='ingenieria';")]
-        datos_selecc[datos_selecc.columns]=datos_selecc[datos_selecc.columns].apply(pd.to_numeric, errors='coerce')
-        datos_selecc=datos_selecc.fillna(0)
-        probs=pickle.loads(contenido_objeto).predict(datos_selecc.drop(['results'], axis=1))
-        datos=pd.DataFrame(probs, columns = ['Probabilidad_predicha'])
+        datos = pd.DataFrame (query_database("select * from data.seleccion;"))
         
         #Esta es la prueba unitaria
         if self.tipo_prueba=="infinito":
