@@ -53,8 +53,8 @@ class sesgo(CopyToTable):
                                     aws_secret_access_key=s3_creds['aws_secret_access_key'])
         cliente_s3 = session.client('s3')
         objeto_s3 = cliente_s3.get_object(
-                                            Bucket='data-product-architecture-equipo8',
-                                            Key='seleccion/2021-04-23T00:00:00.00-MejorModelo.pkl'
+                                            Bucket=f"{self.bucket}",
+                                            Key=f"seleccion/{self.fecha}-MejorModelo.pkl"
                                          )
         contenido_objeto=objeto_s3['Body'].read()
         datos_selecc= pd.DataFrame(query_database("SELECT * from data.ingenieria;"))
