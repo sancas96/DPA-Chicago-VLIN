@@ -1,13 +1,13 @@
-#Este código hace las pruebas unitarias de la ingeniería de características, toma como entrada la base a la que se le hizo la ingeniería y como salida genera metadata de la prueba unitaria que en este caso son los parámetros de lugi.
+#Este código hace las pruebas unitarias de los datos de sesgo e inequidad, aquí prueba que los datos que están en data.sesgo_inequidad no tengan valores infinitos.
 import luigi
 from luigi.contrib.postgres import CopyToTable
 from src.utils.general import *
-from src.utils.test_seleccionar import *
-from src.pipeline.seleccion import seleccionar
+from src.utils.test_sesgo_inequidad import *
+from src.pipeline.sesgo_ineq import sesgo
 from datetime import *
 import pandas as pd
 
-class test_seleccionar(CopyToTable):
+class test_sesgo(CopyToTable):
     #Parámetros de las tareas anteriores y se agrega uno nuevo
     tipo_ingesta = luigi.Parameter() #Puede ser "historica" o "consecutiva".
     fecha = luigi.Parameter() #Fecha en la que se está haciendo la ingesta con respecto a inspection date.
@@ -32,21 +32,21 @@ class test_seleccionar(CopyToTable):
               ]
     
     def requires(self):
-        return seleccionar(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio,self.tipo_prueba)
+        return sesgo(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio,self.tipo_prueba)
     
     def rows(self):
-        datos = pd.DataFrame (query_database("select * from data.seleccion;"))
+        datos = pd.DataFrame (query_database("select * from data.sesgo_inequidad;"))
         
         #Esta es la prueba unitaria
         if self.tipo_prueba=="infinito":
-            test_selecciona(datos).test_noinfs()
+            test_sesg_ineq(datos).test_noinfs()
         else:
-            test_selecciona(datos).test_shape()
+            test_sesg_ineq(datos).test_shape()
         
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         primer_metadata=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos
         segundo_metadata=self.tipo_prueba
-        tercer_metadata="test_seleccion"
+        tercer_metadata="test_sesgo_ineq"
         lista_metadata = [(primer_metadata[0], segundo_metadata, tercer_metadata)]
         
         #Metemos la información en la base de datos        

@@ -63,13 +63,9 @@ class limpiar(CopyToTable):
         with open('archivo_io', 'rb') as obtiene_datos:
             datos_pkl = pickle.load(obtiene_datos)
             
-#         with almacenar(self.tipo_ingesta, self.fecha, self.bucket).output().open() as infile, pd.DataFrame().open('w') as outfile:
-#             datos_pkl.write(infile.read())
-            
- 
-            
         datos_dataframe=pd.json_normalize(datos_pkl)
-        print("########### limpieza", datos_dataframe)
+        #Poniendo columnas en el orden correcto
+        datos_dataframe=datos_dataframe.reindex(columns=[i[0] for i in self.columns])
         datos_limpieza=DataCleanning(datos_dataframe).cleanning()
         print("########### limpieza", datos_dataframe)
         datos_lista=datos_limpieza.values.tolist()

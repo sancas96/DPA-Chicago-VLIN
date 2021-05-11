@@ -38,10 +38,12 @@ class test_limpiar(CopyToTable):
         datos = pd.DataFrame (query_database("select inspection_date from data.limpieza;"))
         
         #Esta es la prueba unitaria
-        if self.tipo_prueba=="infinito":
-            test_limpia(datos).test_noinfs()
-        else:
-            test_limpia(datos).test_shape()
+#         if self.tipo_prueba=="infinito":
+#             test_limpia(datos).test_noinfs()
+#         else:
+#             test_limpia(datos).test_shape()
+
+        test_limpia(datos).test_noinfs()
         
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         primer_metadata=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos

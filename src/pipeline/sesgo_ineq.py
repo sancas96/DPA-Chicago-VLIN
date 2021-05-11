@@ -1,13 +1,15 @@
-#Este task hace la selección del mejor modelo, de acuerdo a la precisión.
+#Este task calcula los sesgos e inequidades del modelo, en este caso punitivo.
+#Como entrada es la tabla de feature engineering, como salida tabla en rds data.sesgo_ineq con los campos necesarios.
 import luigi
+import pickle
+import pandas as pd
+import boto3
 from luigi.contrib.postgres import CopyToTable
 from src.utils.general import *
-from src.utils.seleccionar import *
-from src.pipeline.metadata_entrenamiento import metadata_entrenar
-from datetime import datetime
-import pickle
+from src.utils.sesgo_ineq import *
+from src.pipeline.metadata_seleccion import metadata_seleccionar
 
-class seleccionar(CopyToTable):
+class sesgo(CopyToTable):
     #Parámetros de las tareas anteriores
     tipo_ingesta = luigi.Parameter() #Puede ser "historica" o "consecutiva".
     fecha = luigi.Parameter() #Fecha en la que se está haciendo la ingesta con respecto a inspection date.
@@ -24,32 +26,50 @@ class seleccionar(CopyToTable):
     port = db_creds['port']
     
     #Tabla y columnas donde ingresará la metadata
-    table = 'data.seleccion'
+    table = 'data.sesgo_inequidad'
     columns = [
-                ('fecha_insercion', 'VARCHAR'),
-                ('modelo_seleccionado', 'VARCHAR'),
-                ('precision','NUMERIC')
+                ('attribute_name', 'VARCHAR'),
+                ('attribute_value','VARCHAR'),
+                ('fdr','VARCHAR'),
+                ('fpr','VARCHAR'),
+                ('fdr_disparity','VARCHAR'),
+                ('fpr_disparity','VARCHAR'),
+                ('FDR_Parity','VARCHAR'),
+                ('FPR_Parity','VARCHAR'),
+                ('Statistical_Parity','VARCHAR')
               ]
     
     def requires(self):
-        return metadata_entrenar(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio, self.tipo_prueba)
+        return metadata_seleccionar(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio, self.tipo_prueba)
     
+
     def rows(self):
+        datos_sesgo=pd.DataFrame(query_database("Select license_, results, facility_type from data.ingenieria"))
+        datos_sesgo.columns=['entity_id','label_value','facility_type']
         
-        with open('data/precision_modelos.pkl', 'rb') as pickle_file:
-            diccionario = pickle.load(pickle_file)
-            
-        seleccion=selecciona(diccionario).seleccion()
+        #Obtenemos la predicción del mejor modelo.
+        s3_creds = get_s3_credentials('conf/local/credentials.yaml')
+        session = boto3.Session(aws_access_key_id=s3_creds['aws_access_key_id'],
+                                    aws_secret_access_key=s3_creds['aws_secret_access_key'])
+        cliente_s3 = session.client('s3')
+        objeto_s3 = cliente_s3.get_object(
+                                            Bucket='data-product-architecture-equipo8',
+                                            Key='seleccion/2021-04-23T00:00:00.00-MejorModelo.pkl'
+                                         )
+        contenido_objeto=objeto_s3['Body'].read()
+        datos_selecc= pd.DataFrame(query_database("SELECT * from data.ingenieria;"))
+        datos_selecc.columns=[i[0] for i in query_database("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='ingenieria';")]
+        datos_selecc[datos_selecc.columns]=datos_selecc[datos_selecc.columns].apply(pd.to_numeric, errors='coerce')
+        datos_selecc=datos_selecc.fillna(0)
+        probs=pickle.loads(contenido_objeto).predict(datos_selecc.drop(['results'], axis=1))
+        datos=pd.DataFrame(probs, columns = ['score'])
+        datos_sesgo['score']=datos
         
-        date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        fecha_insercion=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos
+        #Aplicando función de sesgo e inequidad.
+        datos_sesgo=SesgIneq(datos_sesgo).sesgar()
         
-        modelo_seleccionado=seleccion[0]
-        precision=seleccion[1]
-        
-        lista_metadata = [(fecha_insercion[0], modelo_seleccionado, precision)]
-        
-        #Metemos la información en la base de datos        
-        for element in lista_metadata:
+        #Obtenemos los datos
+        datos_lista=datos_sesgo.values.tolist()
+
+        for element in datos_lista:
             yield element
-            
