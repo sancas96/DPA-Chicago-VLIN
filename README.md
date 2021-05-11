@@ -9,7 +9,7 @@ Repositorio para la clase de Arquitectura de Producto de Datos, primavera 2021-I
 |Santiago Castillejos Ita Andehui | sancas96 |
 |Sánchez Gutiérrez Vianney | visagu55 |
 
-# Summary de los datos: 📋
+# Resumen de los datos: 📋
 
 Datos:
 - [**Chicago Food Inspections**](https://data.cityofchicago.org/Health-Human-Services/Food-Inspections/4ijn-s7e5)
@@ -64,7 +64,7 @@ Para la infraestructura de este proyecto ocupamos la siguiente arquitectura:
 | t2.micro | t2.medium | db.t2.micro  |
 | Volumen 20 GiB | Volumen 80 GiB |
 
-Las cuales se iran ocupando a lo largo de esta lectura.
+Las cuales se irán ocupando a lo largo de esta lectura.
 
 Para este proyecto utilizamos la versioń **Python 3.7.4**
 1. Para la reproducibilidad del análisis exploratorio de datos: en la carpeta data, colocar el archivo `Food_Inspections.csv` que está disponible en este [**Drive**](https://drive.google.com/file/d/1Pyobds5_o_4wKHbZQTsmzfVd-NszjEQM/view?usp=sharing)
@@ -85,7 +85,7 @@ Para este proyecto utilizamos la versioń **Python 3.7.4**
 ```
     ssh -o ServerAliveInterval=60 -i ~/.ssh/<<llave_privada>> <<tu_usuario>>@ip_del_ec2
 ```
-#### rds 📦
+#### RDS 📦
 
   Base de datos que contiene las tablas de limpieza e ingeniería de características incluidos los metadatas de todas las tareas:
 
@@ -137,21 +137,22 @@ Referencia: [data-product-architecture](https://github.com/ITAM-DS/data-product-
 # Análisis Exploratorio ⌨️
 El notebook `Chicago_food_inspections.ipynb` con el análisis exploratorio se encuentra en la carpeta `notebooks/eda/`. Para este análisis se uso como información de corte el archivo .csv mencionado en el punto 1 del inciso anterior.
 
-# Luigi 🛠️
-## Ingesta y almacenamiento
+# Luigi como Orquestador del producto de datos 🛠️
+## Supuestos
 
 1. Se asume que dentro de _aws_ se tenga levantado un bucket llamado `data-product-architecture-equipo8` con la siguiente estructura:
 ```
     ├── data-product-architecture-equipo8
     │   ├── ingesta
     |   ├── entrenamiento
+    |   ├── seleccion
 ```
-2. Para poder visualizar los ejercicios en EC2 de procesamiento se realiza un doble espejo que va de:
+2. Para poder visualizar el producto de datos en EC2 de procesamiento se realiza un doble espejo (_double portforwarding_) que va de:
 ```
         EC2 de procesamiento -> Bastión -> tu computadora
 ```
 + En EC2 de procesamiento se ejecuta `luigid`.
-+ En bastión realizas el primer _portforwdaring_:
++ En bastión se realiza el primer _portforwdaring_:
 ```
 ssh -i ~/.ssh/<<llave_privada>> -NL localhost:4444:localhost:8082 <<usuario>>@ip_del_ec2
 ```
@@ -159,11 +160,11 @@ ssh -i ~/.ssh/<<llave_privada>> -NL localhost:4444:localhost:8082 <<usuario>>@ip
 ```
 ssh -i ~/.ssh/<<llave_privada>>-NL localhost:4444:localhost:4444 <<usuario>>@ip_del_ec2
 ```
- En el navegador entras a [http://localhost:4444](http://localhost:4444)
+ En el navegador entrar a [http://localhost:4444](http://localhost:4444)
 
 3. Luigi
 
-Para la ingesta, almacenamiento, limpieza, ingeniería de características, entrenamiento y selección del modelo ocuparemos como orquestador a [Luigi](https://luigi.readthedocs.io/en/stable/index.html). Para cada una de estas tareas los parámetros son los siguientes:
+Para la ingesta, almacenamiento, limpieza, ingeniería de características, entrenamiento, selección y análisis de sesgos e inquidades del modelo ocuparemos como orquestador a [Luigi](https://luigi.readthedocs.io/en/stable/index.html). Para cada una de estas tareas los parámetros son los siguientes:
 
 - **tipo_ingesta**: los parámetros pueden ser "histórica" o "consecutiva".
 - **fecha**: Fecha en la que se está haciendo la ingesta con respecto a inspection date, el formato de está fecha es de esta forma: "yyyy-mm-ddT00:00:00.00".
@@ -173,17 +174,19 @@ Para la ingesta, almacenamiento, limpieza, ingeniería de características, entr
 
 La estructura desarrollada es la siguiente:
 
-  Ingesta inicial y metadata: Con las credenciales que se dieron de alta para conectarnos a la API de _data.cityofchicago.org_, descargamos la base de datos disponible hasta la fecha. Este archivo se guardará con el nombre `historica-{fecha}.pkl`
+## Ingesta
+
+  Ingesta inicial y metadata: Con las credenciales que se dieron de alta para conectarnos a la API de _data.cityofchicago.org_, descargamos la base de datos disponible hasta la fecha. Este archivo se guardará en el bucket S3 en la carpeta _ingesta_ con el nombre `historica-{fecha}.pkl`, la forma de correrlo es la siguiente:
 ```
 PYTHONPATH="." luigi --module src.pipeline.metadata_almacenamiento metadata_almacenar --tipo-ingesta historica --fecha 2021-03-29T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100
 ```    
-  Ingesta consecutiva: Es la descarga de los datos posteriores a la ingesta inicial hasta la fecha solicitada. Este archivo se guardara con el nombre `consecutiva-{fecha}.pkl`
+  Ingesta consecutiva: Es la descarga de los datos posteriores a la ingesta inicial y hasta la fecha solicitada. Este archivo se guardará con el nombre `consecutiva-{fecha}.pkl` dentro del bucket de S3 en la carpeta de ingesta:
 ```
 PYTHONPATH="." luigi --module src.pipeline.metadata_almacenamiento metadata_almacenar --tipo-ingesta consecutiva --fecha 2021-04-05T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100
 ```
-Cada uno de estos ejemplos almacenan también la _metadata_ de estas tareas, esto es en la tabla de _rds_ `metadata_ingesta` y `metadata_almacenar`.
+Cada uno de estos ejemplos almacenan también la _metadata_ de estas tareas, esto es dentro de la base de datos en las tablas `metadata_ingesta` y `metadata_almacenar`, respectivamente.
 
-# Limpieza de datos
+## Limpieza
 Con la base de datos obtenida en las tareas de ingestión y almacenamiento, hacemos un proceso de limpieza donde:
 
   - Se eliminan los datos nulos de las variables `inspection_date`, `license_`, `latitude`, `longitude`,
@@ -191,13 +194,13 @@ Con la base de datos obtenida en las tareas de ingestión y almacenamiento, hace
   - Se eliminan los duplicados,
   - Se sustituyen los datos nulos restantes con cero.
 
-Metadata de limpieza de datos: Guardamos la metadata generada por el proceso de limpieza. Este es un ejemplo de cómo correrlo:
+Metadata de limpieza de datos: Guardamos la metadata generada por el proceso de limpieza en la base de datos con el esquema _metadata_.Este es un ejemplo de cómo debería correrse:
 ```
 PYTHONPATH="." luigi --module src.pipeline.metadata_limpieza metadata_limpiar --tipo-ingesta consecutiva --fecha 2021-04-12T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
 ```
-Este proceso genera las tablas `data.limpieza`, `data.metadata_limpieza` que son las tablas con esta limpieza y la _metadata_ de la misma, respectivamente.
+Este proceso genera las tablas `data.limpieza`, `metadata.metadata_limpieza` que son las tablas con esta limpieza y la _metadata_ de la misma, respectivamente.
 
-# Ingeniería de características
+## Ingeniería de características
 Con los datos limpios, corremos el proceso de ingeniería de características en donde:
   - Convertimos la variable de infracciones en columnas de tipo dummy,
   - Aplicamos label encoding (convertir a categorías numéricas variables categóricas de tipo string),
@@ -209,35 +212,51 @@ PYTHONPATH="." luigi --module src.pipeline.metadata_ingenieria_caract metadata_i
 ```
 Este proceso genera las tablas `data.ingenieria`, `metadata.metadata_ingenieria` que contiene la tabla con la ingeniería de características y la _metadata_ de la misma, respectivamente.
 
-# Entrenamiento
-Con el dataset listo, se divide en entrenamiento y prueba, con porcentajes del 75% y 25% respectivamente. Se corren los siguientes tres modelos de clasificación haciendo uso de la librería _scikit learn_:
+## Entrenamiento
+Con el dataset listo se corren los siguientes tres modelos de clasificación haciendo uso de la librería _scikit learn_:
   - XGboost,
   - KNN,
   - Logistic Regression.
 
-De estos tres calculamos el _accuracy_ y guardamos los valores obtenidos de cada modelo y sus parámetros en archivos pkl en el S3.
+Estos modelos se guardan como formato _.pkl_ en el bucket de S3 en la carpeta de _entrenamiento_.
 
-Metadata de entrenamiento de modelos: Guardamos la metadata generada por el proceso de entrenamiento:
+Metadata de entrenamiento de modelos: Guardamos la metadata generada por el proceso de entrenamiento, esta es la forma de correrlo:
 ```
 PYTHONPATH="." luigi --module src.pipeline.metadata_entrenamiento metadata_entrenar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
 ```
-Para ejemplificar el funcionamiento de la prueba unitaria de entrenamiento podemos correr el código de abajo el cuál hará que falle la prueba unitaria, esto es debido al parámetro del tamanio el cual busca que los archivos sean muy grandes, el cual no es el caso. Esta tarea fallará:
+Para ejemplificar el funcionamiento de la prueba unitaria de entrenamiento podemos correr el código de abajo el cuál hará que falle la prueba unitaria, esto es debido al parámetro del _tamanio_ el cual busca que los archivos sean muy grandes, lo cual no es el caso. Esta tarea fallará:
 ```
 PYTHONPATH="." luigi --module src.pipeline.test_entrenamiento test_entrenar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 1000000000 --tipo-prueba infinito
 ```
 
-# Selección de modelo
-En esta parte se pretende tomar el modelo con el mejor _accuracy_, así que elegimos el máximo _accuracy_ de los 3 modelos de entrenamiento.
+## Selección de modelo
+En esta parte se pretende tomar el modelo con el mejor _accuracy_, así que elegimos el máximo _accuracy_ de los 3 modelos de entrenamiento. Esta tarea genera como salida el mejor modelo en el bucket de S3 en la carpeta de _seleccion_.
 
-Metadata de selección del modelo: Guardamos la metadata generada por el proceso de selección del modelo.
+Metadata de selección del modelo: Guardamos la metadata generada por el proceso de selección del modelo, aquí ejemplificamos cómo correr esta tarea:
 ```
 PYTHONPATH="." luigi --module src.pipeline.metadata_seleccion metadata_seleccionar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
 ```
-Para ejemplificar el funcionamiento de la prueba unitaria de selección podemos correr el código de abajo el cuál hará que falle la prueba unitaria, esto es debido al parámetro de tipo-prueba que busca una forma de (1x5) en la tabla cuando en realidad es diferente. Esta tarea fallará:
+
+## Sesgo e inequidades
+Una parte importante del producto de datos es garantizar que nuestro modelo no esté creando inequidades sobre algún segmento específico, por lo que al momento de realizar este modelo, las consideraciones hechas son:
+  - Este modelo es un modelo punitivo dado que en caso de que el establecimiento resulte con una calificación negativa entonces podría ser cerrado o clausurado.
+  - Se eligió como atributo protegido el _tipo de establecimiento_ ya que nos interesa saber si estamos favoreciendo a un tipo de establecimiento como por ejemplo, los restaurantes.
+  - El grupo de referencia para este atributo protegido es el _restaurante_ esto debido a que consideramos que es el segmento que mayormente se da en esta categoaría.
+  - Usamos el paquete de [aequitas](http://www.datasciencepublicpolicy.org/projects/aequitas/) para el tratamiento de sesgos e inequidades.
+  - Las métricas de cuantificación del sesgo que consideramos fueron: False Positive Rate y False Discovery Rate. La razón del uso de estas métricas es que la primera estará cuantificando de los restaurantes que no pasaron la prueba, ¿cuáles son las posibilidades de que pasaran dado el tipo de establecimiento al que pertenecen? y la segunda métrica estará identificando de aquéllos restaurantes que debieron pasar la inspección, ¿cuáles son las probabilidades de no haber pasado dado el tipo de establecimiento al que pertenencen? 
+ 
+Para ejecutar la tarea de sesgos e inequidad, en conjunto con su prueba unitiaria y la metadata, se correría de la siguiente forma:
+```
+PYTHONPATH="." luigi --module src.pipeline.metadata_sesgo_ineq metadata_sesg_ineq --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
+```
+Esta tarea creará registros en las siguientes tablas `data.sesgo_inequidad`, `test.pruebas_unitarias`, `metadata.metadata_sesgo_inequidad`
+
+Para ejemplificar el funcionamiento de la prueba unitaria de la tarea de sesgo e inequidad podemos correr el código de abajo el cuál hará que falle la prueba unitaria, esto es debido al parámetro de _tipo-prueba_ que busca una forma de (1x5) en la tabla cuando en realidad es diferente. Esta tarea fallará:
 ```
 PYTHONPATH="." luigi --module src.pipeline.metadata_seleccion metadata_seleccionar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba shape
 ```
 
+## DAG en Luigi
 Si las sentencias anteriores se corren en el orden indicado, podremos ver un _DAG_ de Luigi similar a este:
 
 <img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/luigi_checkoint5.png">
@@ -272,7 +291,7 @@ Si las sentencias anteriores se corren en el orden indicado, podremos ver un _DA
 ├── .gitignore         <- Avoids uploading data, credentials, outputs, system files etc
 │
 ├── infrastructure
-├── sql
+├── sql                <- Características de cómo crear la base de datos.
 ├── setup.py
 └── src                <- Source code for use in this project.
     ├── __init__.py    <- Makes src a Python module
