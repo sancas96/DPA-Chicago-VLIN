@@ -3,3 +3,5 @@
 create schema metadata authorization chicago_food;
 create schema data authorization chicago_food;
 create schema test authorization chicago_food;
+create schema api authorization chicago_food;
+create schema monitoreo authorization chicago_food;
