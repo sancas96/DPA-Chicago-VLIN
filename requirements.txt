@@ -1,3 +1,6 @@
+Flask
+Flask-Bootstrap
+psycopg2
 aequitas==0.42.0
 altair==4.1.0
 argon2-cffi==20.1.0
@@ -20,8 +23,6 @@ defusedxml==0.6.0
 docutils==0.15.2
 dominate==2.6.0
 entrypoints==0.3
-Flask
-Flask-Bootstrap
 greenlet==1.0.0
 html5lib==1.1
 httplib2==0.19.1
@@ -70,7 +71,6 @@ pickleshare==0.7.5
 Pillow==8.2.0
 prometheus-client==0.9.0
 prompt-toolkit==3.0.16
-psycopg2
 ptyprocess==0.7.0
 pyasn1==0.4.8
 pycparser==2.20
