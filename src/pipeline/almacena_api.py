@@ -1,18 +1,20 @@
-#Este task limpia el delta y lo mete a la RDS.
+#Este task genera una nueva tabla en el esquema api para que pueda ser consultado por los usuarios
 import luigi
 import pandas as pd
 from luigi.contrib.postgres import CopyToTable
 from src.utils.general import *
-from src.utils.feature_engineering import *
-from src.pipeline.metadata_limpieza import metadata_limpiar
+from src.pipeline.metadata_predecir import metadata_predice
 
-class ingenieria(CopyToTable):
+
+class api(CopyToTable):
     #Parámetros de las tareas anteriores
     tipo_ingesta = luigi.Parameter() #Puede ser "historica" o "consecutiva".
     fecha = luigi.Parameter() #Fecha en la que se está haciendo la ingesta con respecto a inspection date.
     bucket = luigi.Parameter()
-    tamanio = luigi.IntParameter()
-        
+    tamanio= luigi.IntParameter()
+    tipo_prueba= luigi.Parameter() #"infinito" o "shape"
+    proceso= luigi.Parameter() #Puede ser "entrenamiento" o "prediccion"
+    
     #Obteniendo las credenciales para conectarse a la base de datos de chicago
     db_creds = get_database_connection('conf/local/credentials.yaml')
     user = db_creds['user']
@@ -20,11 +22,12 @@ class ingenieria(CopyToTable):
     database = db_creds['database']
     host = db_creds['host']
     port = db_creds['port']
-    
-    table = 'data.ingenieria'
+
+    #Tabla y columnas donde se creará la tabla predicción
+    table = 'api.api_prediccion'
     columns = [
                 ('fecha_parametro','VARCHAR'),
-                ('inspection_id','NUMERIC'),
+                ('inspection_id', 'NUMERIC'),
                 ('dba_name', 'NUMERIC'),
                 ('license_', 'NUMERIC'),
                 ('facility_type', 'VARCHAR'),
@@ -81,22 +84,22 @@ class ingenieria(CopyToTable):
                 ('Restrict_smoking_70', 'NUMERIC'),
                 ('critical_count', 'NUMERIC'),
                 ('serious_count', 'NUMERIC'),
-                ('minor_count', 'NUMERIC')
+                ('minor_count', 'NUMERIC'),
+                ('prediccion', 'NUMERIC'),
+                ('prediccion_proba', 'NUMERIC')
               ]
-    
-    def requires(self):
-        return metadata_limpiar(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio)    
-    
-    def rows(self):
-        #Obtenemos el delta de los datos de limpieza que está en la base de datos usando como parámetro la fecha de proceso.
-        datos_limpios= pd.DataFrame(query_database(f"SELECT * from data.limpieza where fecha_parametro='{self.fecha}';"))
-        datos_limpios.columns=[i[0] for i in query_database("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='limpieza';")]
-        
-        #Aplicando función de ingeniería de características.
-        datos_ingenieria=FeatureEngineering(datos_limpios).feature_engineering()
-        
-        #Obtenemos los datos
-        datos_lista=datos_ingenieria.values.tolist()
 
-        for element in datos_lista:
-            yield element
+    def requires(self):
+        return metadata_predice(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio, self.tipo_prueba,self.proceso)
+
+    def rows(self):
+        if self.proceso=='prediccion':
+            datos_predic= pd.DataFrame(query_database(f"SELECT * from data.prediccion where fecha_parametro='{self.fecha}';"))
+            datos_predic.columns=[i[0] for i in query_database("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='prediccion';")]
+            
+            lista_api=datos_predic.values.tolist()
+            
+            for element in lista_api:
+                yield element
+        else:
+            exit()

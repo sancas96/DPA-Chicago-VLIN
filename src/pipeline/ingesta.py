@@ -44,6 +44,7 @@ class ingestar(luigi.Task):
                                     timedelta(days=1)).date()
             print("########### ingesta", fecha_ultimo)
             print("########### ingesta", fecha_ultimo_formato)
+            print("########### ingesta", self.fecha)
             datos=client.get(constants.id_data_set,
                              where = f"inspection_date between '{fecha_ultimo_formato}' and '{self.fecha}'")
             with self.output().open('w') as outfile:

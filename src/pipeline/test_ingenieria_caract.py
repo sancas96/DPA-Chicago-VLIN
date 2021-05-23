@@ -13,8 +13,7 @@ class test_ingenieria(CopyToTable):
     fecha = luigi.Parameter() #Fecha en la que se está haciendo la ingesta con respecto a inspection date.
     bucket = luigi.Parameter()
     tamanio= luigi.IntParameter()
-    tipo_prueba= luigi.Parameter() #"infinito" o "shape"
-    
+        
     #Obteniendo las credenciales para conectarse a la base de datos de chicago
     db_creds = get_database_connection('conf/local/credentials.yaml')
     user = db_creds['user']
@@ -32,7 +31,7 @@ class test_ingenieria(CopyToTable):
               ]
     
     def requires(self):
-        return ingenieria(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio,self.tipo_prueba)
+        return ingenieria(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio)
     
     def rows(self):
         datos = pd.DataFrame (query_database("select dba_name, risk from data.ingenieria;"))
@@ -47,7 +46,7 @@ class test_ingenieria(CopyToTable):
         
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         primer_metadata=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos
-        segundo_metadata=self.tipo_prueba
+        segundo_metadata="infinito"
         tercer_metadata="test_ingenieria"
         lista_metadata = [(primer_metadata[0], segundo_metadata, tercer_metadata)]
         

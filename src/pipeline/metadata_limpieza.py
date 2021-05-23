@@ -12,8 +12,7 @@ class metadata_limpiar(CopyToTable):
     fecha = luigi.Parameter() 
     bucket = luigi.Parameter()
     tamanio= luigi.IntParameter()
-    tipo_prueba= luigi.Parameter()
-    
+        
     #Obteniendo las credenciales para conectarse a la base de datos de chicago
     db_creds = get_database_connection('conf/local/credentials.yaml')
     user = db_creds['user']
@@ -31,7 +30,7 @@ class metadata_limpiar(CopyToTable):
               ]
     
     def requires(self):
-        return test_limpiar(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio, self.tipo_prueba)
+        return test_limpiar(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio)
     
     def rows(self):
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")

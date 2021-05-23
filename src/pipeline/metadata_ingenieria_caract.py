@@ -13,7 +13,6 @@ class metadata_ingenieria(CopyToTable):
     fecha = luigi.Parameter() #Fecha en la que se está haciendo la ingesta con respecto a inspection date.
     bucket = luigi.Parameter()
     tamanio= luigi.IntParameter()
-    tipo_prueba= luigi.Parameter() #"infinito" o "shape"
     
     #Obteniendo las credenciales para conectarse a la base de datos de chicago
     db_creds = get_database_connection('conf/local/credentials.yaml')
@@ -34,14 +33,13 @@ class metadata_ingenieria(CopyToTable):
               ]
     
     def requires(self):
-        return test_ingenieria(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio, self.tipo_prueba)
+        return test_ingenieria(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio)
     
     def rows(self):
 
         #Obtenemos el delta de los datos de ingeniería de características que está en la base de datos usando como parámetro el número de registros que se insertaron en la tarea que le precede.
-        datos_ingenieria= pd.DataFrame(query_database("SELECT * from data.ingenieria;"))
-        datos_ingenieria.columns=[i[0] for i in query_database(f"SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='ingenieria';")]
-        
+#         datos_ingenieria= pd.DataFrame(query_database("SELECT * from data.ingenieria;"))
+#         datos_ingenieria.columns=[i[0] for i in query_database(f"SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='ingenieria';")]
         date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         primer_metadata=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos
         segundo_metadata=query_database("SELECT count(*) from data.ingenieria;")
@@ -49,7 +47,6 @@ class metadata_ingenieria(CopyToTable):
         cuarto_metadata=query_database("SELECT count(*) from data.ingenieria where serious_count is null;")
         quinto_metadata=query_database("SELECT count(*) from data.ingenieria where minor_count is null;")
         lista_metadata = [(primer_metadata[0], segundo_metadata[0][0], tercer_metadata[0][0],cuarto_metadata[0][0],quinto_metadata[0][0])]
-        
         
         #Metemos la información en la base de datos        
         for element in lista_metadata:

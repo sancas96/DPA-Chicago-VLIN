@@ -26,6 +26,7 @@ class limpiar(CopyToTable):
     
     table = 'data.limpieza'
     columns = [
+                ('fecha_parametro','VARCHAR'),
                 ('inspection_id', 'VARCHAR'),
                 ('dba_name', 'VARCHAR'),
                 ('aka_name', 'VARCHAR'),
@@ -67,9 +68,12 @@ class limpiar(CopyToTable):
         #Poniendo columnas en el orden correcto
         datos_dataframe=datos_dataframe.reindex(columns=[i[0] for i in self.columns])
         datos_limpieza=DataCleanning(datos_dataframe).cleanning()
-        print("########### limpieza", datos_dataframe)
         datos_lista=datos_limpieza.values.tolist()
+        
+        for i in range(len(datos_lista)):
+            datos_lista[i][0]=self.fecha
+        
         print("########### limpieza", datos_lista)
-
+        
         for element in datos_lista:
             yield element

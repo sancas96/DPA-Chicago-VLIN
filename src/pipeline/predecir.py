@@ -1,18 +1,20 @@
-#Este task limpia el delta y lo mete a la RDS.
+#Este task genera las predicciones del mejor modelo seleccionado, dado un data set nuevo que pasó por limpieza e ingeniería de características
 import luigi
+import pickle
 import pandas as pd
+import boto3
 from luigi.contrib.postgres import CopyToTable
 from src.utils.general import *
-from src.utils.feature_engineering import *
-from src.pipeline.metadata_limpieza import metadata_limpiar
+from src.pipeline.metadata_ingenieria_caract import metadata_ingenieria
 
-class ingenieria(CopyToTable):
+class predice(CopyToTable):
     #Parámetros de las tareas anteriores
     tipo_ingesta = luigi.Parameter() #Puede ser "historica" o "consecutiva".
     fecha = luigi.Parameter() #Fecha en la que se está haciendo la ingesta con respecto a inspection date.
     bucket = luigi.Parameter()
-    tamanio = luigi.IntParameter()
-        
+    tamanio= luigi.IntParameter()
+    proceso= luigi.Parameter() #Puede ser "entrenamiento" o "prediccion"
+    
     #Obteniendo las credenciales para conectarse a la base de datos de chicago
     db_creds = get_database_connection('conf/local/credentials.yaml')
     user = db_creds['user']
@@ -20,11 +22,12 @@ class ingenieria(CopyToTable):
     database = db_creds['database']
     host = db_creds['host']
     port = db_creds['port']
-    
-    table = 'data.ingenieria'
+
+    #Tabla y columnas donde se creará la tabla predicción
+    table = 'data.prediccion'
     columns = [
                 ('fecha_parametro','VARCHAR'),
-                ('inspection_id','NUMERIC'),
+                ('inspection_id', 'NUMERIC'),
                 ('dba_name', 'NUMERIC'),
                 ('license_', 'NUMERIC'),
                 ('facility_type', 'VARCHAR'),
@@ -81,22 +84,48 @@ class ingenieria(CopyToTable):
                 ('Restrict_smoking_70', 'NUMERIC'),
                 ('critical_count', 'NUMERIC'),
                 ('serious_count', 'NUMERIC'),
-                ('minor_count', 'NUMERIC')
+                ('minor_count', 'NUMERIC'),
+                ('prediccion', 'NUMERIC'),
+                ('prediccion_proba', 'NUMERIC')
               ]
-    
-    def requires(self):
-        return metadata_limpiar(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio)    
-    
-    def rows(self):
-        #Obtenemos el delta de los datos de limpieza que está en la base de datos usando como parámetro la fecha de proceso.
-        datos_limpios= pd.DataFrame(query_database(f"SELECT * from data.limpieza where fecha_parametro='{self.fecha}';"))
-        datos_limpios.columns=[i[0] for i in query_database("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='limpieza';")]
-        
-        #Aplicando función de ingeniería de características.
-        datos_ingenieria=FeatureEngineering(datos_limpios).feature_engineering()
-        
-        #Obtenemos los datos
-        datos_lista=datos_ingenieria.values.tolist()
 
-        for element in datos_lista:
-            yield element
+    def requires(self):
+        return metadata_ingenieria(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio)
+
+
+    def rows(self):
+        if self.proceso=='prediccion':
+            #Obtenemos la predicción del último mejor modelo.
+            s3_creds = get_s3_credentials('conf/local/credentials.yaml')
+            session = boto3.Session(aws_access_key_id=s3_creds['aws_access_key_id'],
+                                        aws_secret_access_key=s3_creds['aws_secret_access_key'])
+            cliente_s3 = session.client('s3')
+            lista_archivos = cliente_s3.list_objects_v2(Bucket = f"{self.bucket}", Prefix = 'seleccion')['Contents']
+            fecha_ultimo = max(lista_archivos, key=lambda x: x['LastModified'])['Key'][-38:-16]
+            objeto_s3 = cliente_s3.get_object(
+                                                Bucket=f"{self.bucket}",
+                                                Key=f"seleccion/{fecha_ultimo}-MejorModelo.pkl"
+                                             )
+            contenido_objeto=objeto_s3['Body'].read()
+            datos_predic= pd.DataFrame(query_database(f"SELECT * from data.ingenieria where fecha_parametro='{self.fecha}';"))
+            datos_predic.columns=[i[0] for i in query_database("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='ingenieria';")]
+            datos_predic[datos_predic.columns]=datos_predic[datos_predic.columns].apply(pd.to_numeric, errors='coerce')
+            datos_predic=datos_predic.fillna(0)
+            prediccion=pickle.loads(contenido_objeto).predict(datos_predic.drop(['results'], axis=1))
+            prob_prediccion=[r[1] for r in pickle.loads(contenido_objeto).predict_proba(datos_predic.drop(['results'], axis=1))]
+            
+
+            lista_ingenieria=datos_predic.values.tolist()
+            lista_prediccion=prediccion.tolist()
+            
+            for i in range(len(lista_ingenieria)):
+                lista_ingenieria[i][0]=self.fecha
+                lista_ingenieria[i].append(lista_prediccion[i])
+                lista_ingenieria[i].append(prob_prediccion[i])
+
+            print('#######lista_ingenieria',lista_ingenieria[1])                                
+
+            for element in lista_ingenieria:
+                yield element
+        else:
+            exit()

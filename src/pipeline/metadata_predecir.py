@@ -1,17 +1,17 @@
-#Este task inserta metadata para la parte de sesgo e inequidad, son 2 metadatas:
-#fecha de inserción, número de registros en la tabla.
+#Este task inserta metadata para prediccion, son 2 metadatas: fecha de inserción, número de registros en la tabla.
 import luigi
 from luigi.contrib.postgres import CopyToTable
 from src.utils.general import *
-from src.pipeline.test_sesgo_ineq import test_sesgo
+from src.pipeline.test_predecir import test_prediccion
 from datetime import datetime
 
-class metadata_sesg_ineq(CopyToTable):
+class metadata_predice(CopyToTable):
     #Parámetros de las tareas anteriores
     tipo_ingesta = luigi.Parameter()
     fecha = luigi.Parameter() 
     bucket = luigi.Parameter()
     tamanio= luigi.IntParameter()
+    tipo_prueba= luigi.Parameter() #"infinito" o "shape"
     proceso= luigi.Parameter() #Puede ser "entrenamiento" o "prediccion"
     
     #Obteniendo las credenciales para conectarse a la base de datos de chicago
@@ -23,20 +23,20 @@ class metadata_sesg_ineq(CopyToTable):
     port = db_creds['port']
 
     #Tabla y columnas donde ingresará la metadata
-    table = 'metadata.metadata_sesgo_inequidad'
+    table = 'metadata.metadata_prediccion'
     columns = [
                 ('fecha_insercion', 'VARCHAR'),
                 ('num_registros', 'INTEGER')
               ]
 
     def requires(self):
-        return test_sesgo(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio,self.proceso)
+        return test_prediccion(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio,self.tipo_prueba,self.proceso)
 
     def rows(self):
-        if self.proceso=='entrenamiento':
+        if self.proceso=='prediccion':
             date_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             primer_metadata=date_time.split("|") #Convertir a lista para poder meterlo a la base de datos
-            segundo_metadata=query_database("SELECT count(*) from data.sesgo_inequidad;")
+            segundo_metadata=query_database("SELECT count(*) from data.prediccion;")
             lista_metadata = [(primer_metadata[0], segundo_metadata[0][0])]
 
             #Metemos la información en la base de datos        

@@ -88,6 +88,6 @@ class FeatureEngineering():
         train['results'] = (train['results'].values == 'Fail').astype('int')
         train['risk'] = train['risk'].astype(str)
         train['risk'] = le.fit_transform(train['risk'])
-        train = train.drop(['inspection_id', 'aka_name', 'city', 'state', 'inspection_date',
+        train = train.drop(['aka_name', 'city', 'state', 'inspection_date',
                             'inspection_type', 'violations', 'location_latitude', 'location_longitude'], axis = 1)
         return train

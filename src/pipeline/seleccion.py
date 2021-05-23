@@ -14,7 +14,7 @@ class seleccionar(luigi.Task):
     fecha = luigi.Parameter() #Fecha en la que se está haciendo la ingesta con respecto a inspection date.
     bucket = luigi.Parameter()
     tamanio= luigi.IntParameter()
-    tipo_prueba= luigi.Parameter() #"infinito" o "shape"
+    proceso= luigi.Parameter() #Puede ser "entrenamiento" o "prediccion"
     
 #     #Obteniendo las credenciales para conectarse a la base de datos de chicago
 #     db_creds = get_database_connection('conf/local/credentials.yaml')
@@ -33,29 +33,32 @@ class seleccionar(luigi.Task):
 #               ]
     
     def requires(self):
-        return metadata_entrenar(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio, self.tipo_prueba)
+        return metadata_entrenar(self.tipo_ingesta, self.fecha, self.bucket, self.tamanio, self.proceso)
     
     def run(self):
+        if self.proceso=='entrenamiento':
         
-#         with open('data/precision_modelos.pkl', 'rb') as pickle_file:
-#             diccionario = pickle.load(pickle_file)
+    #         with open('data/precision_modelos.pkl', 'rb') as pickle_file:
+    #             diccionario = pickle.load(pickle_file)
 
-        datos_selecc= pd.DataFrame(query_database("SELECT * from data.ingenieria;"))
-        datos_selecc.columns=[i[0] for i in query_database("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='ingenieria';")]
-        datos_selecc[datos_selecc.columns]=datos_selecc[datos_selecc.columns].apply(pd.to_numeric, errors='coerce')
-        datos_selecc=datos_selecc.fillna(0)
-        #Aplicamos la función selección, que busca la máxima accuracy
-        seleccion=selecciona(datos_selecc).seleccion()
-        
-        if seleccion[0]=='XGB':
-            with open('data/entrenamiento_xgb.pkl','rb') as infile, self.output().open('w') as outfile:
-                outfile.write(infile.read())
-        elif seleccion[0]=='LR':
-            with open('data/entrenamiento_lr.pkl','rb') as infile, self.output().open('w') as outfile:
-                outfile.write(infile.read())
+            datos_selecc= pd.DataFrame(query_database("SELECT * from data.ingenieria;"))
+            datos_selecc.columns=[i[0] for i in query_database("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='ingenieria';")]
+            datos_selecc[datos_selecc.columns]=datos_selecc[datos_selecc.columns].apply(pd.to_numeric, errors='coerce')
+            datos_selecc=datos_selecc.fillna(0)
+            #Aplicamos la función selección, que busca la máxima accuracy
+            seleccion=selecciona(datos_selecc).seleccion()
+
+            if seleccion[0]=='XGB':
+                with open('data/entrenamiento_xgb.pkl','rb') as infile, self.output().open('w') as outfile:
+                    outfile.write(infile.read())
+            elif seleccion[0]=='LR':
+                with open('data/entrenamiento_lr.pkl','rb') as infile, self.output().open('w') as outfile:
+                    outfile.write(infile.read())
+            else:
+                with open('data/entrenamiento_knn.pkl','rb') as infile, self.output().open('w') as outfile:
+                    outfile.write(infile.read())
         else:
-            with open('data/entrenamiento_knn.pkl','rb') as infile, self.output().open('w') as outfile:
-                outfile.write(infile.read())
+            exit()
         
     def output(self):
         s3_creds = get_s3_credentials('conf/local/credentials.yaml')
