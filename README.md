@@ -173,8 +173,11 @@ Para la ingesta, almacenamiento, limpieza, ingeniería de características, entr
 - **tipo-prueba**: los parámetros pueden ser "infinito" o "size". Este parámetro puede hacer una prueba unitaria que busque si hay valores infinitos en la tabla o si el tamaño de la tabla es de cierta estructura.
 
 La estructura desarrollada es la siguiente:
+## Rama 1: Entrenamiento
 
-## Ingesta
+En esta rama se encuentra todo el proceso para entrenar el modelo con los datos de la base de datos de Chicago.
+
+### Ingesta
 
   Ingesta inicial y metadata: Con las credenciales que se dieron de alta para conectarnos a la API de _data.cityofchicago.org_, descargamos la base de datos disponible hasta la fecha. Este archivo se guardará en el bucket S3 en la carpeta _ingesta_ con el nombre `historica-{fecha}.pkl`, la forma de correrlo es la siguiente:
 ```
@@ -186,7 +189,7 @@ PYTHONPATH="." luigi --module src.pipeline.metadata_almacenamiento metadata_alma
 ```
 Cada uno de estos ejemplos almacenan también la _metadata_ de estas tareas, esto es dentro de la base de datos en las tablas `metadata_ingesta` y `metadata_almacenar`, respectivamente.
 
-## Limpieza
+### Limpieza
 Con la base de datos obtenida en las tareas de ingestión y almacenamiento, hacemos un proceso de limpieza donde:
 
   - Se eliminan los datos nulos de las variables `inspection_date`, `license_`, `latitude`, `longitude`,
@@ -200,7 +203,7 @@ PYTHONPATH="." luigi --module src.pipeline.metadata_limpieza metadata_limpiar --
 ```
 Este proceso genera las tablas `data.limpieza`, `metadata.metadata_limpieza` que son las tablas con esta limpieza y la _metadata_ de la misma, respectivamente.
 
-## Ingeniería de características
+### Ingeniería de características
 Con los datos limpios, corremos el proceso de ingeniería de características en donde:
   - Convertimos la variable de infracciones en columnas de tipo dummy,
   - Aplicamos label encoding (convertir a categorías numéricas variables categóricas de tipo string),
@@ -212,7 +215,7 @@ PYTHONPATH="." luigi --module src.pipeline.metadata_ingenieria_caract metadata_i
 ```
 Este proceso genera las tablas `data.ingenieria`, `metadata.metadata_ingenieria` que contiene la tabla con la ingeniería de características y la _metadata_ de la misma, respectivamente.
 
-## Entrenamiento
+### Entrenamiento
 Con el dataset listo se corren los siguientes tres modelos de clasificación haciendo uso de la librería _scikit learn_:
   - XGboost,
   - KNN,
@@ -229,7 +232,7 @@ Para ejemplificar el funcionamiento de la prueba unitaria de entrenamiento podem
 PYTHONPATH="." luigi --module src.pipeline.test_entrenamiento test_entrenar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 1000000000 --tipo-prueba infinito
 ```
 
-## Selección de modelo
+### Selección de modelo
 En esta parte se pretende tomar el modelo con el mejor _accuracy_, así que elegimos el máximo _accuracy_ de los 3 modelos de entrenamiento. Esta tarea genera como salida el mejor modelo en el bucket de S3 en la carpeta de _seleccion_.
 
 Metadata de selección del modelo: Guardamos la metadata generada por el proceso de selección del modelo, aquí ejemplificamos cómo correr esta tarea:
@@ -237,7 +240,7 @@ Metadata de selección del modelo: Guardamos la metadata generada por el proceso
 PYTHONPATH="." luigi --module src.pipeline.metadata_seleccion metadata_seleccionar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
 ```
 
-## Sesgo e inequidades
+### Sesgo e inequidades
 Una parte importante del producto de datos es garantizar que nuestro modelo no esté creando inequidades sobre algún segmento específico, por lo que al momento de realizar este modelo, las consideraciones hechas son:
   - Este modelo es un modelo punitivo dado que en caso de que el establecimiento resulte con una calificación negativa entonces podría ser cerrado o clausurado.
   - Se eligió como atributo protegido el _tipo de establecimiento_ ya que nos interesa saber si estamos favoreciendo a un tipo de establecimiento como por ejemplo, los restaurantes.
@@ -256,11 +259,59 @@ Para ejemplificar el funcionamiento de la prueba unitaria de la tarea de sesgo e
 PYTHONPATH="." luigi --module src.pipeline.metadata_seleccion metadata_seleccionar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba shape
 ```
 
+## Rama 2. Producción
+
+### Predicción
+Esta parte se refiere a la salida del algoritmo elegido (en la parte de selección) después de haber sido entrenado en el conjunto de datos históricos y aplicado a nuevos datos al pronosticar la probabilidad de un resultado en particular, en este caso, si el restaurante pasará o no la inspección.
+
+Para ejecutar la tarea de predicción, corremos lo siguiente:
+```
+PYTHONPATH="." luigi --module src.pipeline.predecir predice --tipo-ingesta consecutiva --fecha 2021-04-30T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --proceso prediccion
+```
+Esta tarea creará registros en las siguientes tablas `data.prediccion`,  `metadata.metadata_prediccion`.
+
+Para ejemplificar la prueba unitaria de este proceso, podemos correr el siguiente código, el cual fallará debido a la forma de la tabla porque espera un resultado difetente.
+```
+PYTHONPATH="." luigi --module src.pipeline.test_predecir test_prediccion --tipo-ingesta consecutiva --fecha 2021-04-30T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba shape --proceso prediccion
+```
+Y para guardar la metadata corremos:
+```
+PYTHONPATH="." luigi --module src.pipeline.metadata_predecir metadata_predice --tipo-ingesta consecutiva --fecha 2021-04-30T00:00:00.00 --bucket data-product-architecture-equipo-8l --tamanio 100 --tipo-prueba infinito --proceso prediccion
+```
+### Almacenamiento API
+
+Necesitamos guardar los datos de este proceso de predicción en una tabla para que podamos interactuar con nuestro sistema de forma programática, en este caso, haciendo uso del _framework_ **Flask**.
+
+Guardamos esa información corriendo lo siguiente:
+```
+PYTHONPATH="." luigi --module src.pipeline.almacena_api api --tipo-ingesta consecutiva --fecha 2021-04-30T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito --proceso prediccion
+```
+Nos generará la tabla `api.api_prediccion`. Más adelante explicaremos cómo interactuar con **Flask**.
+
+### Monitoreo predicción
+
+También necesitamos guardar una tabla con la que podamos hacer nuestro monitoreo usando **Dash**, esto se logra corriendo la siguiente sentencia:
+```
+PYTHONPATH="." luigi --module src.pipeline.monitoreo_prediccion monitoreo_predice --tipo-ingesta consecutiva --fecha 2021-04-30T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito --proceso prediccion
+```
+Dando como resultado la tabla `monitoreo.restaurante_scores`.
+
 ## DAG en Luigi
 Si las sentencias anteriores se corren en el orden indicado, podremos ver un _DAG_ de Luigi similar a este:
 
 <img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/Checkpoint6.png">
 
+# Flask
+
+# Dashboard
+
+Dado que nuestro modelo ya se encuentra en producción, necesitamos monitorearlo porque es parte de un sistema dinámico y queremos estar al pendiente de cómo va el desempeño de nuestro modelo ante nuevos datos.
+
+Corremos lo siguiente desde la EC2:
+```
+pyhton dash_app.py
+```
+Esto ejecutará nuestra aplicación **dash** en donde podremos ver una gráfica de comparación entre las predicciones que hizo nuestro modelo y lo que salió en el entrenamiento. Lo que esperamos es que no haya sobreajuste o subajuste, es decir, que ambos resultados sean similares para las categorías que se presenten, en este caso, para tipo de establecimiento.
 # Notas:
 1. Este producto de datos continúa en desarrollo, por lo que aún faltan algunas mejoras,recomendaciones o mejores prácticas que se estarán atendiendo:
 - Las sentencias que se corren de luigi idealmente no deberían contener en la fecha el formato de tiempo.
