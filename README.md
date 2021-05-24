@@ -147,21 +147,30 @@ El notebook `Chicago_food_inspections.ipynb` con el análisis exploratorio se en
     |   ├── entrenamiento
     |   ├── seleccion
 ```
-2. Para poder visualizar el producto de datos en EC2 de procesamiento se realiza un doble espejo (_double portforwarding_) que va de:
-```
-        EC2 de procesamiento -> Bastión -> tu computadora
-```
-+ En EC2 de procesamiento se ejecuta `luigid`.
-+ En bastión se realiza el primer _portforwdaring_:
-```
-ssh -i ~/.ssh/<<llave_privada>> -NL localhost:4444:localhost:8082 <<usuario>>@ip_del_ec2
-```
-+ En tu computadora realizas el segundo _portforwdaring_:
-```
-ssh -i ~/.ssh/<<llave_privada>>-NL localhost:4444:localhost:4444 <<usuario>>@ip_del_ec2
-```
- En el navegador entrar a [http://localhost:4444](http://localhost:4444)
+2. Para poder visualizar el producto de datos, elaborado en la EC2 de procesamiento, en el navegador de tu computadora se realiza un (_portforwarding_). Para esto se requiere seguir los siguientes pasos:
 
++ Habilitar en las reglas de entrada de la EC2 de procesamento al puerto 8082 para `luigid`, al 5000 para `Flask` y al 8050 para `Dash`
++ En EC2 de procesamiento se ejecuta `luigid`
++ En EC2 de procesamiento se ejecuta `Flask` . 
+```
+flask run --host=0.0.0.0
+```
++ Antes de ejecutar `Dash` en el scrpt app.py es importante especificar que el host debe ser  el 0.0.0.0. Lo anterior se realiza añadiendo al final:
+```
+if __name__ == '__main__':
+    app.run_server(debug=True, host = ‘0.0.0.0’)
+```
++ En EC2 de procesamiento se ejecuta `Dash`
+```
+python app.py
+```
++ En el navegador de tu computadora ejecutas para visualizar `luigid`, `Flask` y `Dash`:
+```
+ip_del_ec2:8082
+ip_del_ec2:5000
+ip_del_ec2:5000
+```
+ 
 3. Luigi
 
 Para la ingesta, almacenamiento, limpieza, ingeniería de características, entrenamiento, selección y análisis de sesgos e inquidades del modelo ocuparemos como orquestador a [Luigi](https://luigi.readthedocs.io/en/stable/index.html). Para cada una de estas tareas los parámetros son los siguientes:
