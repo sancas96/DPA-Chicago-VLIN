@@ -5,9 +5,18 @@ import plotly.express as px
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
+from src.utils.general import *
 from dash.dependencies import Input, Output
 
-df=pd.read_csv("/home/luza/Downloads/restaurante_scores.csv")
+db_creds = get_database_connection('conf/local/credentials.yaml')
+user = db_creds['user']
+password = db_creds['password']
+database = db_creds['database']
+host = db_creds['host']
+port = db_creds['port']
+
+df=pd.DataFrame(query_database("SELECT * from monitoreo.restaurante_scores;"))
+df.columns=[i[0] for i in query_database("SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS where table_name='restaurante_scores';")]
 
 app = dash.Dash(__name__)
 
