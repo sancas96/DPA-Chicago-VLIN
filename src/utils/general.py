@@ -65,6 +65,17 @@ def query_database (consulta):
     cur.close()
     conn.close()
     return resultado_consulta
+
+def get_db_conn_sql(credentials_file):
+
+    """
+    :param credentials_file:
+    :return: conection
+    """
+
+    db_creds = get_database_connection('../../conf/local/credentials.yaml')
+    db_conn_str = f"postgresql://{db_creds['user']}:{db_creds['password']}@{db_creds['host']}:{db_creds['port']}/{db_creds['database']}"
+    return db_conn_str
     
 
     
