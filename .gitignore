@@ -1,3 +1,6 @@
+## MacOS
+.DS_Store
+
 # ignore everything in .gitignore
 notebooks/eda/.ipynb_checkpoints/
 data/*.csv
@@ -10,3 +13,5 @@ src/utils/__pycache__
 src/__init__.py
 checkpoints_itam/
 data/luigi/*.pkl
+__pycache__
+archivo_io
