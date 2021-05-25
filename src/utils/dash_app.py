@@ -5,7 +5,7 @@ import plotly.express as px
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from src.utils.general import *
+from general import *
 from dash.dependencies import Input, Output
 
 db_creds = get_database_connection('conf/local/credentials.yaml')
