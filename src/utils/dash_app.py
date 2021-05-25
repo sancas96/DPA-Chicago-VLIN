@@ -5,7 +5,7 @@ import plotly.express as px
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
-from src.utils.general import *
+from general import *
 from dash.dependencies import Input, Output
 
 db_creds = get_database_connection('conf/local/credentials.yaml')
@@ -29,7 +29,7 @@ app.layout = html.Div([
         "Input Variable",
         dcc.Dropdown(
             id='column-dropdown', clearable=False,
-            value = df.columns[3], options=[
+            value = df.columns[2], options=[
                 {'label': c, 'value': c}
                 for c in df.columns
             ])
@@ -63,4 +63,4 @@ def update_figure(column):
 # Run app and dis
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(host='0.0.0.0',port=4321,debug=True)
