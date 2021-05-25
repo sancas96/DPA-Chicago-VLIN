@@ -149,16 +149,16 @@ El notebook `Chicago_food_inspections.ipynb` con el análisis exploratorio se en
 ```
 2. Para poder visualizar el producto de datos, elaborado en la EC2 de procesamiento, en el navegador de tu computadora se realiza un (_portforwarding_). Para esto se requiere seguir los siguientes pasos:
 
-+ Habilitar en las reglas de entrada de la EC2 de procesamento al puerto 8082 para `luigid`, al 5000 para `Flask` y al 8050 para `Dash`
++ Habilitar en las reglas de entrada de la EC2 de procesamento al puerto 8082 para `luigid`, al 1234 para `Flask` y al 4321 para `Dash`
 + En EC2 de procesamiento se ejecuta `luigid`
 + En EC2 de procesamiento se ejecuta `Flask` . 
 ```
-flask run --host=0.0.0.0
+flask run --host=0.0.0.0 --port= 4321
 ```
 + Antes de ejecutar `Dash` en el scrpt app.py es importante especificar que el host debe ser  el 0.0.0.0. Lo anterior se realiza añadiendo al final:
 ```
 if __name__ == '__main__':
-    app.run_server(debug=True, host = ‘0.0.0.0’)
+    app.run_server(debug=True, host = ‘0.0.0.0’, port = ‘1234’ )
 ```
 + En EC2 de procesamiento se ejecuta `Dash`
 ```
@@ -167,8 +167,8 @@ python app.py
 + En el navegador de tu computadora ejecutas para visualizar `luigid`, `Flask` y `Dash`:
 ```
 ip_del_ec2:8082
-ip_del_ec2:5000
-ip_del_ec2:5000
+ip_del_ec2:4321
+ip_del_ec2:1234
 ```
  
 3. Luigi
