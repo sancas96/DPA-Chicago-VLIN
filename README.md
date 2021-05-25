@@ -152,13 +152,11 @@ El notebook `Chicago_food_inspections.ipynb` con el análisis exploratorio se en
 + Habilitar en las reglas de entrada de la EC2 de procesamento al puerto 8082 para `luigid`, al 1234 para `Flask` y al 4321 para `Dash`
 + En EC2 de procesamiento se ejecuta `luigid`
 + En EC2 de procesamiento se ejecuta `Flask` . 
-```
-flask run --host=0.0.0.0 --port= 4321
-```
+
 + Antes de ejecutar `Dash` en el scrpt app.py es importante especificar que el host debe ser  el 0.0.0.0. Lo anterior se realiza añadiendo al final:
 ```
 if __name__ == '__main__':
-    app.run_server(debug=True, host = ‘0.0.0.0’, port = ‘1234’ )
+    app.run_server(debug=True, host = ‘0.0.0.0’, port = ‘4321’ )
 ```
 + En EC2 de procesamiento se ejecuta `Dash`
 ```
@@ -311,6 +309,19 @@ Si las sentencias anteriores se corren en el orden indicado, podremos ver un _DA
 <img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/Checkpoint6.png">
 
 # Flask
+
+Se cuentan con 2 endpoints de API:
++ Endpoint 1:
+  + Input: id establecimiento, y lo que necesites.
+  + Output: JSON con score de predicción, etiqueta predicha
++ Endpoint 2:
+  + Input: fecha prediccion
+  + Output: JSON con una lista que contienen para cada establecimiento que tiene una predicción para ese día: id establecimiento, score de predicción, etiqueta predicha
+
+```
+export FLASK_APP=flask_app.py
+flask run --host=0.0.0.0 --port=1234
+```
 
 # Dashboard
 
