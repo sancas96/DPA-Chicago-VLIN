@@ -29,7 +29,7 @@ app.layout = html.Div([
         "Input Variable",
         dcc.Dropdown(
             id='column-dropdown', clearable=False,
-            value = df.columns[3], options=[
+            value = df.columns[2], options=[
                 {'label': c, 'value': c}
                 for c in df.columns
             ])
@@ -44,12 +44,10 @@ app.scripts.config.serve_locally=True
 def update_figure(column):
     fig=px.histogram(
         df, y=column,
-        facet_col="prediccion",
         histnorm="percent",
         color="entrenamiento",
         orientation="h",
         barmode="group",
-        barnorm="percent",
         title="Establecimientos y sus predicciones",
         color_discrete_map={ # replaces default color mapping by value
                 1: "Mediumvioletred", 0: "Darkgrey"
@@ -57,10 +55,16 @@ def update_figure(column):
         template="plotly_white"
     )
     fig.update_xaxes(title_text='Porcentaje')
-    fig.update_layout(showlegend=False)
+    fig.update_layout(legend=dict(
+        orientation="h",
+        yanchor="bottom",
+        y=1.02,
+        xanchor="right",
+        x=1
+        ))
     
     return fig
 # Run app and dis
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=True, host='0.0.0.0', port=1234)
