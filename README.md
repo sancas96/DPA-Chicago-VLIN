@@ -300,9 +300,11 @@ PYTHONPATH="." luigi --module src.pipeline.monitoreo_prediccion monitoreo_predic
 ## DAG en Luigi
 Si las sentencias anteriores se corren en el orden indicado, podremos ver el _DAG_ de Luigi de la rama de entrenamiento similar a este:
 
-<img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/Checkpoint6.png">
+<img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/Luigi_entrenamiento.jpg">
 
 Y el _DAG_ de la rama de prediccion, similar a este otro:
+
+<img width="1020" alt="imagen2" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/Luigi_prediccion.jpg">
 
 # Flask
 
