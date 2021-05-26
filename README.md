@@ -128,7 +128,9 @@ chicago_database:
   port: "5432"
 ```
 + Esta es la arquitectura de la infraestructura usada en este producto de datos:
-<img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/ec2_security_groups.png">
+<p align="center">
+  <img src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/infra.jpg">
+</p>
 
 Referencia: [data-product-architecture](https://github.com/ITAM-DS/data-product-architecture)
 
