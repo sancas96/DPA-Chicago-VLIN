@@ -46,7 +46,7 @@ Al 15 de enero de 2021 a las 7:39 p.m.
     - **Location**: la latitud y longitud del establecimiento. Tipo localización.
 
   - Para este producto de datos la pregunta analítica que queremos resolver es: ¿El establecimiento pasará o no la inspección?
-  - Frecuencia de actualización de los datos: Diaria, aunque para efectos del proyecto será de manera semanal.
+  - Frecuencia de actualización de los datos: Diaria, aunque para efectos de este proyecto la hacemos de manera semanal.
 
 
 # Reproducibilidad y requerimientos. ⚙️
@@ -102,7 +102,7 @@ Para este proyecto utilizamos la versioń **Python 3.7.4**
   create database chicago_food;
   sudo -u postgres createdb --owner=chicago_user chicago_food
 ```
-Después de este paso es necesario crear los esquemas como se sugiere en el `script`  que está en la ruta `sql`. Las tablas que se van creando dentro de la base de datos se generan automáticamente corriendo las tareas de luigi.
+Después de este paso es necesario crear los esquemas como se indica en el `script`  que está en la ruta `sql`. Las tablas que se van creando dentro de la base de datos se generan automáticamente corriendo las tareas de luigi.
 
 6. La carpeta `conf/local/` debe contener las credenciales para la conexión tanto al _bucket_ en aws (s3), el _token_ para obtener la información de la base de datos a la que nos estamos conectando (food_inspections) y las credenciales para la conexión a la base de datos relacional donde se guardará nuestra información.
 
@@ -135,7 +135,7 @@ Referencia: [data-product-architecture](https://github.com/ITAM-DS/data-product-
 -----
 
 # Análisis Exploratorio ⌨️
-El notebook `Chicago_food_inspections.ipynb` con el análisis exploratorio se encuentra en la carpeta `notebooks/eda/`. Para este análisis se uso como información de corte el archivo .csv mencionado en el punto 1 del inciso anterior.
+El notebook `Chicago_food_inspections.ipynb` con el análisis exploratorio se encuentra en la carpeta `notebooks/eda/`. Para este análisis se usó como información de corte el archivo .csv mencionado en el punto 1 del inciso anterior.
 
 # Luigi como Orquestador del producto de datos 🛠️
 ## Supuestos
@@ -151,16 +151,16 @@ El notebook `Chicago_food_inspections.ipynb` con el análisis exploratorio se en
 
 + Habilitar en las reglas de entrada de la EC2 de procesamento al puerto 8082 para `luigid`, al 1234 para `Flask` y al 4321 para `Dash`
 + En EC2 de procesamiento se ejecuta `luigid`
-+ En EC2 de procesamiento se ejecuta `Flask` . 
++ En EC2 de procesamiento se ejecuta `Flask` ejecutando primero `export FLASK_APP=flask_api.py` y después `flask run --host=0.0.0.0 --port=1234`
 
-+ Antes de ejecutar `Dash` en el scrpt app.py es importante especificar que el host debe ser  el 0.0.0.0. Lo anterior se realiza añadiendo al final:
++ Antes de ejecutar `Dash` en el script app.py es importante especificar que el host debe ser  el 0.0.0.0. Lo anterior se realiza añadiendo al final:
 ```
 if __name__ == '__main__':
     app.run_server(debug=True, host = ‘0.0.0.0’, port = ‘4321’ )
 ```
 + En EC2 de procesamiento se ejecuta `Dash`
 ```
-python app.py
+python src/utils/dash_app.py
 ```
 + En el navegador de tu computadora ejecutas para visualizar `luigid`, `Flask` y `Dash`:
 ```
@@ -171,20 +171,21 @@ ip_del_ec2:1234
  
 3. Luigi
 
-Para la ingesta, almacenamiento, limpieza, ingeniería de características, entrenamiento, selección y análisis de sesgos e inquidades del modelo ocuparemos como orquestador a [Luigi](https://luigi.readthedocs.io/en/stable/index.html). Para cada una de estas tareas los parámetros son los siguientes:
+Para la ingesta, almacenamiento, limpieza, ingeniería de características, entrenamiento, selección, análisis de sesgos e inquidades, predicción, api y monitoreo ocuparemos como orquestador a [Luigi](https://luigi.readthedocs.io/en/stable/index.html). Donde los parámetros los definimos de la siguiente forma:
 
 - **tipo_ingesta**: los parámetros pueden ser "histórica" o "consecutiva".
 - **fecha**: Fecha en la que se está haciendo la ingesta con respecto a inspection date, el formato de está fecha es de esta forma: "yyyy-mm-ddT00:00:00.00".
 - **bucket**: nombre de tu bucket en `aws`.
-- **tamanio**: tamaño del archivo almacenado. Este parámetro sirve para hacer la prueba unitaria, la prueba identifica si el archivo que se está almacenando es mayor que el número de bits que aquí se indiquen.
-- **tipo-prueba**: los parámetros pueden ser "infinito" o "size". Este parámetro puede hacer una prueba unitaria que busque si hay valores infinitos en la tabla o si el tamaño de la tabla es de cierta estructura.
+- **tamanio**: tamaño del archivo almacenado. Este parámetro sirve para hacer pruebas unitarias sobre los archivos almacenados ya sea localmente o en S3, la prueba identifica si el archivo tiene un número de bits mayor al que se indica en el paŕametro.
+- **tipo-prueba**: los parámetros pueden ser "infinito" o "shape". Este parámetro sirve para mostrar el fallo de la prueba unitaria para la tarea de predicción. Lo que valida con "infinito" es que no haya valores infinitos para los campos numéricos y "shape" busca que las tablas de RDS tengan una dimensión de 1.
+- **proceso**: puede tomar valores de "entrenamiento" o "prediccion", sirve para identificar en cuál parte del modelo de machine learning nos encontramos.
 
-La estructura desarrollada es la siguiente:
+La estructura de las tareas en luigi es la siguiente:
 ## Rama 1: Entrenamiento
 
 En esta rama se encuentra todo el proceso para entrenar el modelo con los datos de la base de datos de Chicago.
 
-### Ingesta
+### Ingesta y almacenamiento
 
   Ingesta inicial y metadata: Con las credenciales que se dieron de alta para conectarnos a la API de _data.cityofchicago.org_, descargamos la base de datos disponible hasta la fecha. Este archivo se guardará en el bucket S3 en la carpeta _ingesta_ con el nombre `historica-{fecha}.pkl`, la forma de correrlo es la siguiente:
 ```
@@ -192,9 +193,9 @@ PYTHONPATH="." luigi --module src.pipeline.metadata_almacenamiento metadata_alma
 ```    
   Ingesta consecutiva: Es la descarga de los datos posteriores a la ingesta inicial y hasta la fecha solicitada. Este archivo se guardará con el nombre `consecutiva-{fecha}.pkl` dentro del bucket de S3 en la carpeta de ingesta:
 ```
-PYTHONPATH="." luigi --module src.pipeline.metadata_almacenamiento metadata_almacenar --tipo-ingesta consecutiva --fecha 2021-04-05T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100
+PYTHONPATH="." luigi --module src.pipeline.metadata_almacenamiento metadata_almacenar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100
 ```
-Cada uno de estos ejemplos almacenan también la _metadata_ de estas tareas, esto es dentro de la base de datos en las tablas `metadata_ingesta` y `metadata_almacenar`, respectivamente.
+Cada uno de estos ejemplos almacenan también la _metadata_ de estas tareas, esto es dentro de la base de datos en las tablas `metadata_ingesta` y `metadata_almacenar`, respectivamente. Adicionalmente, en el esquema _test_ crea una tabla llamada _pruebas_unitarias_ donde se almacenan las pruebas unitarias de todas las tareas.
 
 ### Limpieza
 Con la base de datos obtenida en las tareas de ingestión y almacenamiento, hacemos un proceso de limpieza donde:
@@ -206,7 +207,7 @@ Con la base de datos obtenida en las tareas de ingestión y almacenamiento, hace
 
 Metadata de limpieza de datos: Guardamos la metadata generada por el proceso de limpieza en la base de datos con el esquema _metadata_.Este es un ejemplo de cómo debería correrse:
 ```
-PYTHONPATH="." luigi --module src.pipeline.metadata_limpieza metadata_limpiar --tipo-ingesta consecutiva --fecha 2021-04-12T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
+PYTHONPATH="." luigi --module src.pipeline.metadata_limpieza metadata_limpiar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100
 ```
 Este proceso genera las tablas `data.limpieza`, `metadata.metadata_limpieza` que son las tablas con esta limpieza y la _metadata_ de la misma, respectivamente.
 
@@ -218,7 +219,7 @@ Con los datos limpios, corremos el proceso de ingeniería de características en
 
 Metadata de ingeniería de características: Guardamos la metadata generada por el proceso de ingeniería de características. Se corre de esta manera:
 ```
-PYTHONPATH="." luigi --module src.pipeline.metadata_ingenieria_caract metadata_ingenieria --tipo-ingesta consecutiva --fecha 2021-04-15T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
+PYTHONPATH="." luigi --module src.pipeline.metadata_ingenieria_caract metadata_ingenieria --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100
 ```
 Este proceso genera las tablas `data.ingenieria`, `metadata.metadata_ingenieria` que contiene la tabla con la ingeniería de características y la _metadata_ de la misma, respectivamente.
 
@@ -232,19 +233,15 @@ Estos modelos se guardan como formato _.pkl_ en el bucket de S3 en la carpeta de
 
 Metadata de entrenamiento de modelos: Guardamos la metadata generada por el proceso de entrenamiento, esta es la forma de correrlo:
 ```
-PYTHONPATH="." luigi --module src.pipeline.metadata_entrenamiento metadata_entrenar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
-```
-Para ejemplificar el funcionamiento de la prueba unitaria de entrenamiento podemos correr el código de abajo el cuál hará que falle la prueba unitaria, esto es debido al parámetro del _tamanio_ el cual busca que los archivos sean muy grandes, lo cual no es el caso. Esta tarea fallará:
-```
-PYTHONPATH="." luigi --module src.pipeline.test_entrenamiento test_entrenar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 1000000000 --tipo-prueba infinito
+PYTHONPATH="." luigi --module src.pipeline.metadata_entrenamiento metadata_entrenar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --proceso entrenamiento
 ```
 
 ### Selección de modelo
 En esta parte se pretende tomar el modelo con el mejor _accuracy_, así que elegimos el máximo _accuracy_ de los 3 modelos de entrenamiento. Esta tarea genera como salida el mejor modelo en el bucket de S3 en la carpeta de _seleccion_.
 
-Metadata de selección del modelo: Guardamos la metadata generada por el proceso de selección del modelo, aquí ejemplificamos cómo correr esta tarea:
+Metadata de selección del modelo: Guardamos la metadata generada por el proceso de selección del modelo en la tabla _metadata.metadata_seleccion_, aquí ejemplificamos cómo correr esta tarea:
 ```
-PYTHONPATH="." luigi --module src.pipeline.metadata_seleccion metadata_seleccionar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
+PYTHONPATH="." luigi --module src.pipeline.metadata_seleccion metadata_seleccionar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --proceso entrenamiento
 ```
 
 ### Sesgo e inequidades
@@ -257,121 +254,103 @@ Una parte importante del producto de datos es garantizar que nuestro modelo no e
  
 Para ejecutar la tarea de sesgos e inequidad, en conjunto con su prueba unitiaria y la metadata, se correría de la siguiente forma:
 ```
-PYTHONPATH="." luigi --module src.pipeline.metadata_sesgo_ineq metadata_sesg_ineq --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito
+PYTHONPATH="." luigi --module src.pipeline.metadata_sesgo_ineq metadata_sesg_ineq --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --proceso entrenamiento
 ```
 Esta tarea creará registros en las siguientes tablas `data.sesgo_inequidad`, `test.pruebas_unitarias`, `metadata.metadata_sesgo_inequidad`
 
-Para ejemplificar el funcionamiento de la prueba unitaria de la tarea de sesgo e inequidad podemos correr el código de abajo el cuál hará que falle la prueba unitaria, esto es debido al parámetro de _tipo-prueba_ que busca una forma de (1x5) en la tabla cuando en realidad es diferente. Esta tarea fallará:
+### Monitoreo entrenamiento
+Una vez entrenado el modelo y haber seleccionado uno de ellos, estaríamos interesados en verificar que el último momento en que se entrenó el modelo corresponde en proporción a cómo está prediciendo el mismo, para esto generamos una tabla en el esquema _monitoreo_ que se llama _restaurante_scores_ que eventualmente también servirá para desplegar nuestro dashboard. La forma de correr esta tarea es la siguiente:
 ```
-PYTHONPATH="." luigi --module src.pipeline.metadata_seleccion metadata_seleccionar --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba shape
+PYTHONPATH="." luigi --module src.pipeline.monitoreo_entrenamiento monitoreo_entrena --tipo-ingesta consecutiva --fecha 2021-04-23T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --proceso entrenamiento
 ```
 
-## Rama 2. Producción
+## Rama 2. Predicción
 
 ### Predicción
 Esta parte se refiere a la salida del algoritmo elegido (en la parte de selección) después de haber sido entrenado en el conjunto de datos históricos y aplicado a nuevos datos al pronosticar la probabilidad de un resultado en particular, en este caso, si el restaurante pasará o no la inspección.
 
 Para ejecutar la tarea de predicción, corremos lo siguiente:
 ```
-PYTHONPATH="." luigi --module src.pipeline.predecir predice --tipo-ingesta consecutiva --fecha 2021-04-30T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --proceso prediccion
+PYTHONPATH="." luigi --module src.pipeline.metadata_predecir metadata_predice --tipo-ingesta consecutiva --fecha 2021-04-30T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito --proceso prediccion
 ```
-Esta tarea creará registros en las siguientes tablas `data.prediccion`,  `metadata.metadata_prediccion`.
+Esta tarea creará registros en las siguientes tablas `data.prediccion`, `metadata.metadata_prediccion`.
 
-Para ejemplificar la prueba unitaria de este proceso, podemos correr el siguiente código, el cual fallará debido a la forma de la tabla porque espera un resultado difetente.
+Para ejemplificar la prueba unitaria de este proceso, podemos correr el siguiente código, el cual fallará debido a la forma de la tabla porque espera un resultado con una forma de 1x1.
 ```
 PYTHONPATH="." luigi --module src.pipeline.test_predecir test_prediccion --tipo-ingesta consecutiva --fecha 2021-04-30T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba shape --proceso prediccion
 ```
-Y para guardar la metadata corremos:
-```
-PYTHONPATH="." luigi --module src.pipeline.metadata_predecir metadata_predice --tipo-ingesta consecutiva --fecha 2021-04-30T00:00:00.00 --bucket data-product-architecture-equipo-8l --tamanio 100 --tipo-prueba infinito --proceso prediccion
-```
+
 ### Almacenamiento API
 
-Necesitamos guardar los datos de este proceso de predicción en una tabla para que podamos interactuar con nuestro sistema de forma programática, en este caso, haciendo uso del _framework_ **Flask**.
+Para poder exponer nuestro producto de datos creamos una API en **Flask** y adicionalmente la expondremos de una forma didáctica con _flask-restplus_, para esto creamos un nuevo esquema en nuestra base de datos llamado _api_ con la tabla _api_prediccion_ y se guardan los datos de este proceso de predicción.
 
 Guardamos esa información corriendo lo siguiente:
 ```
 PYTHONPATH="." luigi --module src.pipeline.almacena_api api --tipo-ingesta consecutiva --fecha 2021-04-30T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito --proceso prediccion
 ```
-Nos generará la tabla `api.api_prediccion`. Más adelante explicaremos cómo interactuar con **Flask**.
+Más adelante explicaremos cómo interactuar con **Flask**.
 
 ### Monitoreo predicción
 
-También necesitamos guardar una tabla con la que podamos hacer nuestro monitoreo usando **Dash**, esto se logra corriendo la siguiente sentencia:
+En esta tarea insertamos nuevos datos a la tabla de _restaurante_scores_ que se encuentra en el esquema _monitoreo_ para poder validar que efectivamente la predicción se está comportando de una manera similar al entrenamiento, esta tabla será usada por **Dash**, para tener nuestro monitoreo de una forma más visual, esto se logra corriendo la siguiente sentencia:
 ```
 PYTHONPATH="." luigi --module src.pipeline.monitoreo_prediccion monitoreo_predice --tipo-ingesta consecutiva --fecha 2021-04-30T00:00:00.00 --bucket data-product-architecture-equipo8 --tamanio 100 --tipo-prueba infinito --proceso prediccion
 ```
-Dando como resultado la tabla `monitoreo.restaurante_scores`.
 
 ## DAG en Luigi
-Si las sentencias anteriores se corren en el orden indicado, podremos ver un _DAG_ de Luigi similar a este:
+Si las sentencias anteriores se corren en el orden indicado, podremos ver el _DAG_ de Luigi de la rama de entrenamiento similar a este:
 
 <img width="1020" alt="imagen" src="https://github.com/sancas96/DPA-Chicago-VLIN/blob/main/images/Checkpoint6.png">
+
+Y el _DAG_ de la rama de prediccion, similar a este otro:
 
 # Flask
 
 Se cuentan con 2 endpoints de API:
 + Endpoint 1:
-  + Input: id establecimiento, y lo que necesites.
+  + Input: id establecimiento y probabilidad.
   + Output: JSON con score de predicción, etiqueta predicha
+  Como ejemplo se puede poner el id_establecimiento 33 o 55
 + Endpoint 2:
   + Input: fecha prediccion
-  + Output: JSON con una lista que contienen para cada establecimiento que tiene una predicción para ese día: id establecimiento, score de predicción, etiqueta predicha
+  + Output: JSON con una lista que contienen para cada establecimiento que tiene una predicción para ese día: id establecimiento, score de predicción, etiqueta predicha.
+  Como ejemplo se puede poner la fecha_prediccion `2021-04-30T00:00:00.00`
 
+Dentro de la ruta del repo se corren las siguientes sentencias para lanzar **Flask**
 ```
 export FLASK_APP=flask_app.py
 flask run --host=0.0.0.0 --port=1234
 ```
 
-# Dashboard
+## Dashboard
 
 Dado que nuestro modelo ya se encuentra en producción, necesitamos monitorearlo porque es parte de un sistema dinámico y queremos estar al pendiente de cómo va el desempeño de nuestro modelo ante nuevos datos.
 
-Corremos lo siguiente desde la EC2:
+Corremos lo siguiente desde la EC2 y dentro de este repositorio:
 ```
-pyhton dash_app.py
+python src/utils/dash_app.py
 ```
-Esto ejecutará nuestra aplicación **dash** en donde podremos ver una gráfica de comparación entre las predicciones que hizo nuestro modelo y lo que salió en el entrenamiento. Lo que esperamos es que no haya sobreajuste o subajuste, es decir, que ambos resultados sean similares para las categorías que se presenten, en este caso, para tipo de establecimiento.
-# Notas:
-1. Este producto de datos continúa en desarrollo, por lo que aún faltan algunas mejoras,recomendaciones o mejores prácticas que se estarán atendiendo:
-- Las sentencias que se corren de luigi idealmente no deberían contener en la fecha el formato de tiempo.
-- Igualmente en la sentencia de luigi lo ideal sería no introducir un parámetro para el nombre del _bucket_ e incluirlo como parte de una constante en el archivo `constants.py`.
-
-2. El usuario lmillan ya fue asignado con la llave correspondiente a toda la infraestructura.
+Esto ejecutará nuestra aplicación **Dash** en donde podremos ver una gráfica de comparación entre las predicciones que hizo nuestro modelo y lo que salió en el entrenamiento. Lo que esperamos es que no haya sobreajuste o subajuste, es decir, que ambos resultados sean similares para las categorías que se presenten, en este caso, para tipo de establecimiento.
 
 ---
 
 **Figura 1**. Estructura básica del proyecto.
 
 ```  
-├── README.md          <- The top-level README for developers using this project.
+├── README.md          <- Aquí se encuentra la explicación de este producto de datos.
 ├── conf
-│   ├── base           <- Space for shared configurations like parameters
-│   └── local          <- Space for local configurations, usually credentials
-├── data               <- Space for data
-├── docs               <- Space for Sphinx documentation
-├── images             <- Space for images
-├── notebooks          <- Jupyter notebooks.
-│
-├── references         <- Data dictionaries, manuals, and all other explanatory materials.
-│
-├── results            <- Intermediate analysis as HTML, PDF, LaTeX, etc.
-│
-├── requirements.txt   <- The requirements file
-│
-├── .gitignore         <- Avoids uploading data, credentials, outputs, system files etc
-│
-├── infrastructure
+│   ├── base           <- Configuración de parámetros.
+│   └── local          <- Se almacenan las llaves para interactuar con este producto de datos.
+├── data               <- Guarda de manera local algunos archivos para la ejecución de las tareas.
+│   └── luigi          <- Guarda archivos de ingesta de manera local.
+├── images             <- Imágenes utilizadas en este repositorio.
+├── notebooks          <- Notebook de análisis exploratorio.
+├── requirements.txt   <- Archivo que indica todas las librerías usadas por python y  para actival el pyenv.
+├── .gitignore         <- Indica qué archivos evitar subir cuando se hace push al repositorio.
+├── infrastructure     <- Se encuentra la api de flask y dash.
 ├── sql                <- Características de cómo crear la base de datos.
-├── setup.py
-└── src                <- Source code for use in this project.
-    ├── __init__.py    <- Makes src a Python module
-    │
-    ├── utils          <- Functions used across the project
-    │
-    │
-    ├── etl            <- Scripts to transform data from raw to intermediate
-    │
-    │
-    └── pipeline       <- Scripts to data ingestion
+└── src                <- Códigos fuentes usados en este proyecto.
+    ├── etl            <- Transformación de datos.
+    ├── pipeline       <- Scripts donde vienen todas la tareas de Luigi.
+    └── utils          <- Scripts de funciones que ayudan al pipeline.
 ```
